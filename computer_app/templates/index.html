@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pass the Ball — Proximity Dashboard</title>
+  <style>
+    /* ── reset & base ───────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      gap: 20px;
+    }
+
+    /* ── header ─────────────────────────────────────────────────────────── */
+    header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    h1 span { color: #60a5fa; }
+
+    #serial-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 20px;
+      padding: 6px 14px;
+    }
+
+    #serial-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #ef4444;
+      transition: background 0.4s;
+    }
+    #serial-dot.connected { background: #22c55e; }
+
+    /* ── player grid ─────────────────────────────────────────────────────── */
+    #players {
+      width: 100%;
+      max-width: 900px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .player-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3348;
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .player-card.holding {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 2px #60a5fa33, 0 4px 24px #60a5fa22;
+    }
+
+    .player-card.offline { opacity: 0.45; }
+
+    /* card header row */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .holding-badge {
+      display: none;
+      background: #60a5fa;
+      color: #0f1117;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .player-card.holding .holding-badge { display: block; }
+
+    /* RSSI meter */
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .meter-track {
+      position: relative;
+      height: 12px;
+      background: #0f1117;
+      border-radius: 8px;
+      overflow: visible;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 8px;
+      background: #334155;
+      transition: width 0.3s ease, background 0.3s ease;
+      min-width: 4px;
+    }
+
+    /* threshold marker */
+    .meter-threshold {
+      position: absolute;
+      top: -4px;
+      bottom: -4px;
+      width: 2px;
+      background: #f59e0b;
+      border-radius: 2px;
+    }
+
+    .meter-threshold::after {
+      content: "HOT";
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      color: #f59e0b;
+      white-space: nowrap;
+    }
+
+    /* proximity label */
+    .proximity-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 6px;
+      border-radius: 8px;
+      background: #0f1117;
+      color: #64748b;
+      transition: color 0.3s, background 0.3s;
+    }
+
+    .proximity-label.hot  { color: #f87171; background: #7f1d1d33; }
+    .proximity-label.warm { color: #fb923c; background: #7c2d1233; }
+    .proximity-label.cold { color: #60a5fa; background: #1e3a5f33; }
+
+    /* stats row */
+    .stats {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stat {
+      flex: 1;
+      background: #0f1117;
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── empty state ─────────────────────────────────────────────────────── */
+    #empty-state {
+      color: #475569;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 48px 0;
+    }
+
+    /* ── footer controls ─────────────────────────────────────────────────── */
+    footer {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    button#reset-btn {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      color: #94a3b8;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    button#reset-btn:hover { background: #2d3348; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Pass the <span>Ball</span></h1>
+    <div id="serial-badge">
+      <div id="serial-dot"></div>
+      <span id="serial-label">Connecting…</span>
+    </div>
+  </header>
+
+  <div id="players">
+    <p id="empty-state">Waiting for micro:bit data…<br>Make sure Micro:bit 3 is plugged in via USB.</p>
+  </div>
+
+  <footer>
+    <button id="reset-btn">Reset Session</button>
+  </footer>
+
+  <!-- Socket.IO from CDN — works offline too once cached -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/static/dashboard.js"></script>
+  <script>
+    // Pass server-side config to JS
+    window.RSSI_HOT  = {{ rssi_hot }};
+    window.RSSI_WARM = {{ rssi_warm }};
+  </script>
+</body>
+</html>
