@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treasure Hunt - Game Setup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 2.5rem 3rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f0c040;
+      text-align: center;
+      margin-bottom: 0.4rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #8b949e;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-bottom: 0.4rem;
+      margin-top: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    select {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #e6edf3;
+      font-size: 1rem;
+      appearance: none;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #f0c040; }
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 2rem;
+      padding: 0.8rem;
+      background: #f0c040;
+      color: #0d1117;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #ffd700; }
+
+    .current-config {
+      margin-top: 1.5rem;
+      padding: 0.8rem 1rem;
+      background: #1c2128;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+    .current-config span { color: #e6edf3; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🏴 Treasure Hunt</h1>
+    <p class="subtitle">Configure your game before starting</p>
+
+    <form method="POST" action="/setup">
+      <label for="hunters">Number of Hunters</label>
+      <select id="hunters" name="hunters">
+        {% for i in range(1, 6) %}
+          <option value="{{ i }}" {% if state.active_hunters|length == i %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="treasures">Number of Treasures</label>
+      <select id="treasures" name="treasures">
+        {% for i in range(1, 6) %}
+          <option value="{{ i }}" {% if state.active_treasures|length == i %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+      </select>
+
+      <button class="btn" type="submit">Start Game ▶</button>
+    </form>
+
+    {% if state.active_hunters %}
+    <div class="current-config">
+      Current config: <span>{{ state.active_hunters|length }}</span> hunter(s),
+      <span>{{ state.active_treasures|length }}</span> treasure(s) —
+      {{ state.active_hunters|join(', ') }} hunting {{ state.active_treasures|join(', ') }}
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>

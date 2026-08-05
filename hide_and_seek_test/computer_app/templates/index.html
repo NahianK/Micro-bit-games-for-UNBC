@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hide and Seek — Test Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0f1117; color: #e2e8f0;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 24px 16px; gap: 20px;
+    }
+    header {
+      width: 100%; max-width: 960px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    h1 span { color: #a78bfa; }
+    #serial-badge {
+      display: flex; align-items: center; gap: 8px; font-size: 0.8rem;
+      background: #1e2130; border: 1px solid #2d3348; border-radius: 20px; padding: 6px 14px;
+    }
+    #serial-dot { width: 9px; height: 9px; border-radius: 50%; background: #ef4444; transition: background 0.4s; }
+    #serial-dot.connected { background: #22c55e; }
+    #hiders {
+      width: 100%; max-width: 960px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+    }
+    .hider-card {
+      background: #1a1d2e; border: 1px solid #2d3348; border-radius: 16px;
+      padding: 20px 22px; display: flex; flex-direction: column; gap: 14px;
+      transition: border-color 0.4s, box-shadow 0.4s;
+    }
+    .hider-card.found {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 2px #22c55e33, 0 4px 28px #22c55e22;
+    }
+    .hider-card.offline { opacity: 0.4; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; }
+    .hider-name { font-size: 1.2rem; font-weight: 700; }
+    .found-badge {
+      display: none; background: #22c55e; color: #0f1117;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 4px 10px; border-radius: 20px;
+    }
+    .hider-card.found .found-badge { display: block; }
+    .meter-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: #64748b; margin-bottom: 4px; }
+    .meter-track { position: relative; height: 10px; background: #0f1117; border-radius: 8px; overflow: visible; }
+    .meter-fill { height: 100%; border-radius: 8px; background: #334155; transition: width 0.3s ease, background 0.3s ease; min-width: 4px; }
+    .meter-threshold {
+      position: absolute; top: -4px; bottom: -4px; width: 2px; background: #f59e0b; border-radius: 2px;
+    }
+    .meter-threshold::after {
+      content: "HOT"; position: absolute; top: -18px; left: 50%;
+      transform: translateX(-50%); font-size: 0.6rem; color: #f59e0b; white-space: nowrap;
+    }
+    .proximity-label {
+      font-size: 0.82rem; font-weight: 600; text-align: center;
+      padding: 5px; border-radius: 8px; background: #0f1117; color: #64748b;
+      transition: color 0.3s, background 0.3s;
+    }
+    .proximity-label.hot  { color: #f87171; background: #7f1d1d33; }
+    .proximity-label.warm { color: #fb923c; background: #7c2d1233; }
+    .proximity-label.cold { color: #60a5fa; background: #1e3a5f33; }
+    .card-footer { display: flex; gap: 10px; }
+    .stat { flex: 1; background: #0f1117; border-radius: 10px; padding: 10px; text-align: center; }
+    .stat-value { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+    .stat-label { font-size: 0.68rem; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .relay-rssi { font-size: 0.72rem; color: #475569; text-align: right; margin-top: -6px; }
+    #empty-state { color: #475569; font-size: 0.9rem; text-align: center; padding: 48px 0; }
+    footer { width: 100%; max-width: 960px; display: flex; justify-content: flex-end; }
+    button#reset-btn {
+      background: #1e2130; border: 1px solid #2d3348; color: #94a3b8;
+      padding: 8px 20px; border-radius: 8px; font-size: 0.85rem;
+      cursor: pointer; transition: background 0.2s, color 0.2s;
+    }
+    button#reset-btn:hover { background: #2d3348; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hide and <span>Seek</span> — Test</h1>
+    <div id="serial-badge">
+      <div id="serial-dot"></div>
+      <span id="serial-label">Connecting…</span>
+    </div>
+  </header>
+
+  <div id="hiders">
+    <p id="empty-state">Waiting for hider data…<br>Make sure the relay hider micro:bit is plugged in via USB.</p>
+  </div>
+
+  <footer><button id="reset-btn">Reset Session</button></footer>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    window.RSSI_HOT  = {{ rssi_hot }};
+    window.RSSI_WARM = {{ rssi_warm }};
+  </script>
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>

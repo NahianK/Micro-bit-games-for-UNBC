@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treasure Hunt Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.4rem; color: #f0c040; flex: 1; }
+    .badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .badge-ok  { background: #1a4731; color: #3fb950; border: 1px solid #3fb950; }
+    .badge-err { background: #4c1616; color: #f85149; border: 1px solid #f85149; }
+    .header-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: transparent;
+      color: #e6edf3;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .header-btn:hover { background: #21262d; }
+    .reset-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #f85149;
+      background: transparent;
+      color: #f85149;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .reset-btn:hover { background: #4c1616; }
+
+    /* ── Main grid ── */
+    main {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 700px) { main { grid-template-columns: 1fr; } }
+
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8b949e;
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── Hunter card ── */
+    .hunter-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .hunter-card.claiming {
+      border-color: #e3912a;
+      box-shadow: 0 0 12px rgba(227,145,42,0.4);
+    }
+    .hunter-card.found {
+      border-color: #3fb950;
+      box-shadow: 0 0 12px rgba(63,185,80,0.3);
+    }
+    .hunter-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+    .hunter-name { font-size: 1rem; font-weight: 700; color: #f0c040; }
+    .hunter-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+    }
+    .label-hot  { background: #3fb950; color: #0d1117; }
+    .label-warm { background: #e3912a; color: #0d1117; }
+    .label-cold { background: #1c2128; color: #8b949e; }
+    .label-found { background: #f0c040; color: #0d1117; }
+
+    .prox-bar-wrap {
+      height: 10px;
+      background: #21262d;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 0.4rem;
+    }
+    .prox-bar {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.4s, background 0.4s;
+      background: #3fb950;
+    }
+    .hunter-meta {
+      font-size: 0.78rem;
+      color: #8b949e;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Treasure card ── */
+    .treasure-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+      transition: border-color 0.5s, box-shadow 0.5s;
+    }
+    .treasure-card.found {
+      border-color: #f0c040;
+      box-shadow: 0 0 18px rgba(240,192,64,0.4);
+    }
+    .treasure-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .treasure-name { font-size: 1rem; font-weight: 700; color: #f0c040; }
+    .found-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.2rem 0.7rem;
+      border-radius: 6px;
+      background: #f0c040;
+      color: #0d1117;
+    }
+    .treasure-info { font-size: 0.8rem; color: #8b949e; margin-top: 0.4rem; }
+    .treasure-info span { color: #e6edf3; }
+
+    .signal-bar-wrap {
+      height: 6px;
+      background: #21262d;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .signal-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: #58a6ff;
+      transition: width 0.4s;
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem;
+      color: #8b949e;
+    }
+    .empty a { color: #f0c040; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏴 Treasure Hunt</h1>
+  <span class="badge badge-err" id="serial-badge">● Disconnected</span>
+  <a class="header-btn" href="/setup">⚙ Setup</a>
+  <button class="reset-btn" id="reset-btn">↺ Reset Session</button>
+</header>
+
+<main>
+  <!-- Hunter column -->
+  <div id="hunters-col">
+    <div class="section-title">Hunters</div>
+    <div id="hunters-grid"></div>
+  </div>
+
+  <!-- Treasure column -->
+  <div id="treasures-col">
+    <div class="section-title">Treasures</div>
+    <div id="treasures-grid"></div>
+  </div>
+</main>
+
+<!-- Inject server-side config as JS globals -->
+<script>
+  window.RSSI_HOT       = {{ rssi_hot }};
+  window.RSSI_WARM      = {{ rssi_warm }};
+  window.ACTIVE_HUNTERS   = {{ active_hunters | tojson }};
+  window.ACTIVE_TREASURES = {{ active_treasures | tojson }};
+</script>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/static/dashboard.js"></script>
+</body>
+</html>
