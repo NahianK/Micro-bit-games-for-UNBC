@@ -33,31 +33,60 @@ Use [python.microbit.org](https://python.microbit.org) (browser-based MicroPytho
 
 ## Running the Computer App
 
-### 1. Install Python dependencies (once)
+### On Windows (development / testing)
+
+#### 1. Install Python dependencies (once)
 ```
 cd computer_app
 pip install -r requirements.txt
 ```
 
-### 2. Find your serial port
-- Windows: open **Device Manager → Ports** — look for "USB Serial Device (COMx)"
-- Raspberry Pi: run `ls /dev/tty*` before and after plugging in — new entry is your port
-
-### 3. Set your serial port
-Edit `computer_app/config.py`:
-```python
-SERIAL_PORT = "COM3"        # Windows example
-# SERIAL_PORT = "/dev/ttyACM0"  # Raspberry Pi
-```
-
-### 4. Run the app
+#### 2. Run the app
 ```
 python app.py
 ```
+The serial port is **auto-detected** — no config change needed.
+Override with an environment variable if necessary:
+```
+set MICROBIT_PORT=COM4 && python app.py
+```
 
-### 5. Open the dashboard
+#### 3. Open the dashboard
 Navigate to [http://localhost:5000](http://localhost:5000) in any browser.
-On Raspberry Pi B+: open `http://<pi-ip-address>:5000` from any device on the same network.
+
+---
+
+### On Raspberry Pi B+ or Pi 5
+
+#### 1. Copy the repo to the Pi
+```bash
+git clone <your-repo-url> ~/pass_the_ball
+# or: scp -r pass_the_ball_test pi@<pi-ip>:~/pass_the_ball
+```
+
+#### 2. Run the one-shot setup script
+```bash
+cd ~/pass_the_ball
+bash setup_pi.sh
+```
+
+This script:
+- Installs Python dependencies
+- Adds your user to the `dialout` group (serial port access)
+- Installs and **enables a systemd service** so the dashboard starts automatically on boot
+
+#### 3. Open the dashboard
+```
+http://<pi-ip-address>:5000
+```
+from any device on the same network.
+
+#### Useful Pi commands
+```bash
+sudo systemctl status pass-the-ball   # check if running
+journalctl -u pass-the-ball -f        # live log
+sudo systemctl restart pass-the-ball  # restart after a code change
+```
 
 ---
 
@@ -92,15 +121,17 @@ RSSI_WARM = -75
 
 ---
 
-## Moving to Raspberry Pi B+
+## Moving from Pi 5 to Pi B+
 
-1. Copy the entire `computer_app/` folder to the Pi
-2. Install dependencies: `pip install -r requirements.txt`
-3. Change `SERIAL_PORT` in `config.py` to `/dev/ttyACM0`
-4. Run `python app.py` on the Pi
-5. Access dashboard at `http://<pi-ip>:5000` from any device on the network
+No code changes needed — the serial port is auto-detected and the systemd service is identical.
 
-No other code changes needed.
+1. Copy the repo to the Pi B+
+2. Run `bash setup_pi.sh` (same script)
+3. Access dashboard at `http://<pi-b-plus-ip>:5000`
+
+> **Pi B+ note:** The B+ is slower but handles this app fine.
+> If the dashboard feels sluggish on the B+, reduce `SMOOTH_WINDOW` in `config.py`
+> to `3` to lower CPU usage from serial processing.
 
 ---
 

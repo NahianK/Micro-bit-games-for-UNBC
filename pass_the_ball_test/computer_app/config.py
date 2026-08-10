@@ -1,13 +1,37 @@
 # config.py — All tunable settings for the Pass the Ball computer app
 #
-# When moving to Raspberry Pi B+:
-#   Change SERIAL_PORT to "/dev/ttyACM0" (or /dev/ttyUSB0 — check with `ls /dev/tty*`)
-#   Everything else stays the same.
+# Serial port is auto-detected from the Micro:bit's USB vendor/product ID.
+# No manual changes needed when switching between Windows and Raspberry Pi.
+# Override by setting the MICROBIT_PORT environment variable if needed:
+#   Windows  : set MICROBIT_PORT=COM4 && python app.py
+#   Linux/Pi : MICROBIT_PORT=/dev/ttyACM1 python app.py
+
+import os
+import sys
+import serial.tools.list_ports
 
 # ── Serial connection ─────────────────────────────────────────────────────────
-# Windows: check Device Manager > Ports (COMx) after plugging in Micro:bit 3
-# Raspberry Pi: typically /dev/ttyACM0
-SERIAL_PORT = "COM3"
+# Micro:bit USB identifiers (same on all OS)
+_MICROBIT_VID = 0x0D28
+_MICROBIT_PID = 0x0204
+
+def _find_serial_port() -> str:
+    """Return the first Micro:bit serial port found, or a platform default."""
+    # Environment variable override — useful for unusual port numbers
+    if "MICROBIT_PORT" in os.environ:
+        return os.environ["MICROBIT_PORT"]
+
+    # Auto-detect by USB vendor/product ID
+    for port in serial.tools.list_ports.comports():
+        if port.vid == _MICROBIT_VID and port.pid == _MICROBIT_PID:
+            return port.device
+
+    # Fallback defaults per platform
+    if sys.platform.startswith("win"):
+        return "COM3"
+    return "/dev/ttyACM0"   # Linux / Raspberry Pi
+
+SERIAL_PORT = _find_serial_port()
 BAUD_RATE   = 115200
 
 # ── RSSI thresholds (dBm) ─────────────────────────────────────────────────────
