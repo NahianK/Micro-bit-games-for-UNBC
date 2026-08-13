@@ -13,9 +13,21 @@
 #   Everything else stays the same.
 
 # ── Serial connection ─────────────────────────────────────────────────────────
-# Windows: Device Manager → Ports (COMx) after plugging in the Bridge micro:bit
-# Raspberry Pi: typically /dev/ttyACM0
-SERIAL_PORT = "COM3"
+# Port is auto-detected by micro:bit USB VID:PID — no manual changes needed.
+# Override: set MICROBIT_PORT env variable if auto-detect picks the wrong port.
+#   Windows : set MICROBIT_PORT=COM4 && python app.py
+#   Linux   : MICROBIT_PORT=/dev/ttyACM1 python app.py
+import os, sys, serial.tools.list_ports as _lp
+
+def _find_serial_port():
+    if "MICROBIT_PORT" in os.environ:
+        return os.environ["MICROBIT_PORT"]
+    for p in _lp.comports():
+        if p.vid == 0x0D28 and p.pid == 0x0204:
+            return p.device
+    return "COM3" if sys.platform.startswith("win") else "/dev/ttyACM0"
+
+SERIAL_PORT = _find_serial_port()
 BAUD_RATE   = 115200
 
 # ── RSSI thresholds (dBm) ─────────────────────────────────────────────────────

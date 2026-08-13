@@ -12,7 +12,19 @@
 #   Run: python app.py   (same command on Pi)
 
 # ── Serial connection ─────────────────────────────────────────────────────────
-SERIAL_PORT = 'COM3'     # Windows: check Device Manager → Ports
+# Port is auto-detected by micro:bit USB VID:PID — works on Windows and Linux.
+# Override: set MICROBIT_PORT env variable if auto-detect picks the wrong port.
+import os, sys, serial.tools.list_ports as _lp
+
+def _find_serial_port():
+    if "MICROBIT_PORT" in os.environ:
+        return os.environ["MICROBIT_PORT"]
+    for p in _lp.comports():
+        if p.vid == 0x0D28 and p.pid == 0x0204:
+            return p.device
+    return "COM3" if sys.platform.startswith("win") else "/dev/ttyACM0"
+
+SERIAL_PORT = _find_serial_port()
                           # Raspberry Pi: typically /dev/ttyACM0
 BAUD_RATE   = 115200
 

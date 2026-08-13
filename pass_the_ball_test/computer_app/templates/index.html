@@ -246,13 +246,13 @@
     <button id="reset-btn">Reset Session</button>
   </footer>
 
-  <!-- Socket.IO from CDN — works offline too once cached -->
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="/static/dashboard.js"></script>
+  <!-- Globals must be defined BEFORE dashboard.js runs -->
   <script>
-    // Pass server-side config to JS
     window.RSSI_HOT  = {{ rssi_hot }};
     window.RSSI_WARM = {{ rssi_warm }};
   </script>
+  <!-- Socket.IO from CDN — works offline too once cached -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/static/dashboard.js"></script>
 </body>
 </html>

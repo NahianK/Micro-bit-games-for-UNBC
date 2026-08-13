@@ -155,5 +155,14 @@ socketio.emit = _patched_emit
 # Start serial reader and run app
 # ---------------------------------------------------------------------------
 if __name__ == '__main__':
+    import socket as _socket
+    try:
+        _ip = _socket.gethostbyname(_socket.gethostname())
+    except Exception:
+        _ip = "unknown"
     serial_reader.start_reader(socketio, state)
+    print(f"Dashboard (this device):  http://localhost:{PORT}")
+    print(f"Dashboard (other devices on same WiFi): http://{_ip}:{PORT}")
+    print("If other devices cannot connect, run this once in PowerShell (as Admin):")
+    print(f"  netsh advfirewall firewall add rule name=\"Microbit Dashboard\" dir=in action=allow protocol=TCP localport={PORT}")
     socketio.run(app, host=HOST, port=PORT, debug=False)
