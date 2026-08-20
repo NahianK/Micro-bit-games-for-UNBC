@@ -21,67 +21,81 @@
       border-radius: 12px;
       padding: 2.5rem 3rem;
       width: 100%;
-      max-width: 420px;
+      max-width: 460px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
     h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #f0c040;
-      text-align: center;
-      margin-bottom: 0.4rem;
+      font-size: 1.6rem; font-weight: 700; color: #f0c040;
+      text-align: center; margin-bottom: 0.4rem;
     }
     .subtitle {
-      text-align: center;
-      color: #8b949e;
-      font-size: 0.9rem;
-      margin-bottom: 2rem;
+      text-align: center; color: #8b949e;
+      font-size: 0.9rem; margin-bottom: 2rem;
     }
     label {
-      display: block;
-      font-size: 0.85rem;
-      color: #8b949e;
-      margin-bottom: 0.4rem;
-      margin-top: 1.2rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      display: block; font-size: 0.85rem; color: #8b949e;
+      margin-bottom: 0.4rem; margin-top: 1.2rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
     }
     select {
-      width: 100%;
-      padding: 0.65rem 1rem;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      color: #e6edf3;
-      font-size: 1rem;
-      appearance: none;
-      cursor: pointer;
+      width: 100%; padding: 0.65rem 1rem;
+      background: #0d1117; border: 1px solid #30363d;
+      border-radius: 8px; color: #e6edf3; font-size: 1rem;
+      appearance: none; cursor: pointer;
     }
     select:focus { outline: none; border-color: #f0c040; }
+
+    /* ── Reachy Mini section ── */
+    .reachy-section {
+      margin-top: 1.5rem;
+      padding: 1rem 1.2rem;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+    }
+    .reachy-section:focus-within { border-color: #58a6ff; }
+    .reachy-toggle {
+      display: flex; align-items: center; gap: 0.75rem; cursor: pointer;
+    }
+    .reachy-toggle input[type="checkbox"] {
+      width: 1.1rem; height: 1.1rem; accent-color: #58a6ff; cursor: pointer;
+    }
+    .reachy-toggle-label {
+      font-size: 0.95rem; font-weight: 600; color: #e6edf3; user-select: none;
+    }
+    .reachy-status-row {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-top: 0.7rem; font-size: 0.82rem; color: #8b949e;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ok     { background: #3fb950; }
+    .dot-err    { background: #f85149; }
+    .dot-loading { background: #8b949e; animation: pulse 1s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.35; }
+    }
+    .reachy-note {
+      margin-top: 0.6rem; font-size: 0.8rem; color: #8b949e;
+      line-height: 1.4;
+    }
+    #reachy-disabled-note {
+      margin-top: 0.5rem; font-size: 0.8rem; color: #8b949e;
+      font-style: italic;
+    }
+
     .btn {
-      display: block;
-      width: 100%;
-      margin-top: 2rem;
+      display: block; width: 100%; margin-top: 2rem;
       padding: 0.8rem;
-      background: #f0c040;
-      color: #0d1117;
-      font-size: 1.1rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      background: #f0c040; color: #0d1117;
+      font-size: 1.1rem; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer;
       transition: background 0.2s;
     }
     .btn:hover { background: #ffd700; }
-
     .current-config {
-      margin-top: 1.5rem;
-      padding: 0.8rem 1rem;
-      background: #1c2128;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      color: #8b949e;
+      margin-top: 1.5rem; padding: 0.8rem 1rem;
+      background: #1c2128; border: 1px solid #30363d;
+      border-radius: 8px; font-size: 0.85rem; color: #8b949e;
     }
     .current-config span { color: #e6edf3; font-weight: 600; }
   </style>
@@ -94,7 +108,7 @@
     <form method="POST" action="/setup">
       <label for="hunters">Number of Hunters</label>
       <select id="hunters" name="hunters">
-        {% for i in range(1, 6) %}
+        {% for i in range(1, 9) %}
           <option value="{{ i }}" {% if state.active_hunters|length == i %}selected{% endif %}>{{ i }}</option>
         {% endfor %}
       </select>
@@ -105,6 +119,37 @@
           <option value="{{ i }}" {% if state.active_treasures|length == i %}selected{% endif %}>{{ i }}</option>
         {% endfor %}
       </select>
+
+      <!-- ── Reachy Mini ── -->
+      {% if reachy_status.enabled %}
+      <div class="reachy-section">
+        <label class="reachy-toggle" for="use_reachy">
+          <input type="checkbox" id="use_reachy" name="use_reachy"
+                 {% if reachy_status.available %}{% else %}disabled{% endif %}>
+          <span class="reachy-toggle-label">🤖 Use Reachy Mini</span>
+        </label>
+
+        <div class="reachy-status-row" id="reachy-status-row">
+          {% if reachy_status.available %}
+            <span class="dot dot-ok"></span>
+            <span>Agent online — robot_ready={{ reachy_status.robot_ready }}</span>
+          {% else %}
+            <span class="dot dot-err"></span>
+            <span id="reachy-status-msg">{{ reachy_status.error or 'Agent offline' }}</span>
+          {% endif %}
+        </div>
+
+        <div class="reachy-note" id="reachy-note" style="display:none">
+          When checked, Start Game runs full Reachy init (voice + camera tracking)
+          then the identification ceremony. Requires micro:bit V2 hunters and the
+          agent on the robot (<code>python reachy_cli.py start</code>).
+        </div>
+      </div>
+      {% else %}
+      <div id="reachy-disabled-note">
+        Reachy Mini: disabled in config.py (USE_REACHY = False)
+      </div>
+      {% endif %}
 
       <button class="btn" type="submit">Start Game ▶</button>
     </form>
@@ -117,5 +162,38 @@
     </div>
     {% endif %}
   </div>
+
+  <script>
+    // Show Reachy note when checkbox is checked
+    var cb = document.getElementById('use_reachy');
+    var note = document.getElementById('reachy-note');
+    if (cb && note) {
+      function toggleNote() { note.style.display = cb.checked ? 'block' : 'none'; }
+      cb.addEventListener('change', toggleNote);
+      toggleNote();
+    }
+
+    // Live poll for agent availability (every 5 seconds)
+    {% if reachy_status.enabled %}
+    function pollReachyHealth() {
+      fetch('/api/reachy_health')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var row = document.getElementById('reachy-status-row');
+          var msg = document.getElementById('reachy-status-msg');
+          if (!row) return;
+          if (d.available) {
+            row.innerHTML = '<span class="dot dot-ok"></span><span>Agent online — robot_ready=' + d.robot_ready + '</span>';
+            if (cb) cb.disabled = false;
+          } else {
+            row.innerHTML = '<span class="dot dot-err"></span><span>' + (d.error || 'Agent offline') + '</span>';
+            if (cb) { cb.disabled = true; cb.checked = false; }
+          }
+        })
+        .catch(function() {});
+    }
+    setInterval(pollReachyHealth, 5000);
+    {% endif %}
+  </script>
 </body>
 </html>

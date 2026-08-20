@@ -1,56 +1,88 @@
-# mb_bridge.py — Flash onto the dedicated Bridge micro:bit (Micro:bit 1)
+# mb_bridge.py — Treasure Hunt bridge micro:bit (USB relay + registration downlink)
 #
-# ── REUSE NOTE ──────────────────────────────────────────────────────────────
-# This file is IDENTICAL for all games (Pass the Ball, Hide and Seek,
-# Treasure Hunt). The bridge is game-agnostic — it relays everything it hears
-# over radio to the computer via USB serial. No changes needed between games.
-# ────────────────────────────────────────────────────────────────────────────
+# REUSE NOTE: The uplink (radio → serial) section is identical to all other
+# games in this repo. A downlink section has been added to relay registration
+# commands from the PC to the radio group.
 #
-# This device is STATIONARY — place it near the computer and keep the USB
-# cable connected at all times. It is NOT a player.
+# This device is STATIONARY — keep the USB cable connected at all times.
+# It is NOT a hunter or a treasure.
 #
-# It listens to all radio traffic on group 42 and relays every packet to
-# the computer as a single serial line: "<message>,<rssi>\n"
+# UPLINK (radio → PC serial, every packet):
+#   <message>,<rssi>\n        — anything heard on radio group 42
 #
-# Example serial output:
-#   BALL,-72          → ball broadcast; rssi = ball's distance to bridge
-#   P1:-65,-80        → player 1's ball RSSI (-65), player's rssi at bridge (-80)
-#   P3:-55,-70        → player 3's ball RSSI (-55), player's rssi at bridge (-70)
-#   HOLDER:2,-55      → player 2 claiming possession (used by ball LED)
+# DOWNLINK (PC serial → radio, only RG| registration commands):
+#   RG|S|<tok>\n              — broadcast REG_START to all hunters
+#   RG|A|<nonce>|<tok>|<code>\n   — assign code to one hunter
+#   RG|K|<nonce>|<hid>\n     — confirm binding
+#   RG|E\n                   — end / cancel session
+#   RG|G\n                   — game start (hunters play go-jingle)
 #
-# LED: downward arrow (toward USB) confirms bridge mode.
-# Button A: scrolls the radio group on screen for debugging.
+# The bridge relays ALL radio packets upward and only validated RG| commands
+# downward. It never calls uart.init() — that would break the USB serial link.
+#
+# LED: down arrow (towards USB) = bridge mode.
+# Button A: scroll radio group for debugging.
 
 from microbit import *
 import radio
 
 RADIO_GROUP = 42
-RADIO_POWER = 7         # bridge listens at max power to hear all players
+RADIO_POWER = 7   # max power so the bridge hears all devices
 
+radio.config(group=RADIO_GROUP, power=RADIO_POWER, queue=8, length=64)
 radio.on()
-radio.config(group=RADIO_GROUP, power=RADIO_POWER)
 
-display.scroll("BRDG", delay=80)
-display.show(Image.ARROW_S)   # pointing down = USB connected below
+display.scroll('BRDG', delay=80)
+display.show(Image.ARROW_S)   # arrow pointing down = USB connected below
+
+rx_buffer = b''   # partial serial line arriving from the PC
+
+
+def decode(raw):
+    """Strip the 3-byte radio header and return printable ASCII."""
+    if isinstance(raw, bytes):
+        return ''.join(chr(b) for b in raw[3:] if 32 <= b < 127).strip()
+    return str(raw).strip()
+
 
 while True:
+    # -----------------------------------------------------------------------
+    # DOWNLINK: commands pushed from the PC to broadcast over radio
+    # -----------------------------------------------------------------------
+    # uart.any() is true when bytes are waiting in the USB serial buffer.
+    # Do NOT call uart.init() here — the default UART IS the USB connection
+    # that print() writes to; reinitialising it breaks both directions.
+    if uart.any():
+        chunk = uart.read()
+        if chunk:
+            rx_buffer += chunk
+            while b'\n' in rx_buffer:
+                line, rx_buffer = rx_buffer.split(b'\n', 1)
+                try:
+                    cmd = line.decode('utf-8').strip()
+                    # Only relay validated registration commands to the radio.
+                    # Anything else is silently discarded (no error propagation).
+                    if cmd.startswith('RG|') and len(cmd) <= 60:
+                        radio.send(cmd)
+                except Exception:
+                    pass  # never let a bad byte take the bridge down
+            # Safety valve: if no newline arrives within 200 bytes, discard.
+            if len(rx_buffer) > 200:
+                rx_buffer = b''
+
+    # -----------------------------------------------------------------------
+    # UPLINK: every radio packet forwarded to the PC
+    # -----------------------------------------------------------------------
     packet = radio.receive_full()
     if packet:
         raw, rssi, _ = packet
-
-        # MicroPython v2 returns bytes with a 3-byte radio header — strip & decode
-        # REUSE: this decoding block is identical in all bridge/relay firmware
-        if isinstance(raw, bytes):
-            text = "".join(chr(b) for b in raw[3:] if 32 <= b < 127).strip()
-        else:
-            text = str(raw).strip()
-
+        text = decode(raw)
         if text:
-            print("{},{}".format(text, rssi))
+            print('{},{}'.format(text, rssi))
 
-    # Button A: show radio group on screen for debugging
+    # Debug: Button A scrolls the radio group
     if button_a.was_pressed():
-        display.scroll("GRP" + str(RADIO_GROUP), delay=80)
+        display.scroll('GRP{}'.format(RADIO_GROUP), delay=80)
         display.show(Image.ARROW_S)
 
     sleep(5)

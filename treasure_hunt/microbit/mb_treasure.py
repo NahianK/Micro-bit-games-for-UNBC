@@ -59,6 +59,7 @@ radio.on()
 last_claim         = None   # hunter_id of most recent CLAIM received
 last_claim_time_ms = 0      # running_time() when claim arrived
 next_broadcast_ms  = 0      # schedule next TRS broadcast
+is_found           = False  # stop TRS beacons after a confirmed find
 
 # ---------------------------------------------------------------------------
 # Helper: MicroPython v2 bytes decoding (REQUIRED for receive_full)
@@ -80,9 +81,10 @@ def decode_packet(packet):
 while True:
     now = running_time()
 
-    # --- Broadcast TRS beacon ---
+    # --- Broadcast TRS beacon (silent once found so hunters stop ranging) ---
     if now >= next_broadcast_ms:
-        radio.send('TRS:{}'.format(TREASURE_ID))
+        if not is_found:
+            radio.send('TRS:{}'.format(TREASURE_ID))
         next_broadcast_ms = now + BROADCAST_INTERVAL + random.randint(-BROADCAST_JITTER, BROADCAST_JITTER)
 
     # --- Receive radio packets ---
@@ -106,10 +108,12 @@ while True:
         if (last_claim is not None and
                 (running_time() - last_claim_time_ms) <= CLAIM_WINDOW_MS):
             found_msg = 'FOUND:{}:{}'.format(TREASURE_ID, last_claim)
-            radio.send(found_msg)
+            is_found = True
+            # Repeat so nearby hunters (not just the finder) hear it
+            for _ in range(4):
+                radio.send(found_msg)
+                sleep(80)
             display.show(Image.YES)
-            sleep(2000)
-            display.scroll(TREASURE_ID, delay=80)
             last_claim = None
             last_claim_time_ms = 0
         else:

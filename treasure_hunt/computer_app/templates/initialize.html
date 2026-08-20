@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treasure Hunt — Hunter Identification</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117; color: #e6edf3;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+    }
+    header {
+      width: 100%; background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    header h1 { font-size: 1.3rem; color: #f0c040; flex: 1; }
+    .cancel-btn {
+      padding: 0.4rem 1rem; border-radius: 8px;
+      border: 1px solid #f85149; background: transparent;
+      color: #f85149; font-size: 0.85rem; cursor: pointer;
+    }
+    .cancel-btn:hover { background: #4c1616; }
+
+    .main { max-width: 640px; width: 100%; padding: 2rem 1.5rem; }
+
+    .phase-label {
+      font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #58a6ff;
+      margin-bottom: 0.4rem;
+    }
+    .phase-title {
+      font-size: 1.6rem; font-weight: 800; color: #f0c040;
+      margin-bottom: 0.5rem;
+    }
+    .phase-desc { font-size: 0.92rem; color: #8b949e; line-height: 1.6; }
+
+    /* ── Hunters grid ── */
+    .hunters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.8rem; margin-top: 1.8rem;
+    }
+    .hunter-chip {
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 10px; padding: 0.9rem 1rem;
+      text-align: center; transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .hunter-chip.state-waiting  { border-color: #30363d; }
+    .hunter-chip.state-ready    { border-color: #58a6ff; box-shadow: 0 0 8px rgba(88,166,255,0.3); }
+    .hunter-chip.state-prompted { border-color: #e3912a; box-shadow: 0 0 10px rgba(227,145,42,0.4); }
+    .hunter-chip.state-acked    { border-color: #3fb950; box-shadow: 0 0 10px rgba(63,185,80,0.3); }
+    .hunter-chip-id   { font-size: 1.1rem; font-weight: 800; color: #f0c040; }
+    .hunter-chip-code {
+      margin-top: 0.35rem; font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.12em; color: #e6edf3; font-family: monospace;
+    }
+    .hunter-chip-status { font-size: 0.75rem; color: #8b949e; margin-top: 0.3rem; }
+
+    /* ── Prompt spotlight ── */
+    #prompt-box {
+      margin-top: 2rem; padding: 1.4rem 1.8rem;
+      background: #0d1117; border: 1px solid #e3912a;
+      border-radius: 12px; display: none;
+    }
+    #prompt-box.visible { display: block; }
+    .prompt-label {
+      font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #e3912a; margin-bottom: 0.5rem;
+    }
+    .prompt-hunter { font-size: 1.4rem; font-weight: 800; color: #f0c040; }
+    .prompt-code {
+      font-size: 2.4rem; font-weight: 900; letter-spacing: 0.2em;
+      color: #e6edf3; font-family: monospace; margin: 0.4rem 0 0.2rem;
+    }
+    .prompt-hint { font-size: 0.85rem; color: #8b949e; }
+
+    /* ── Status / progress bar ── */
+    .progress-row { display: flex; align-items: center; gap: 1rem; margin-top: 1.8rem; }
+    .progress-bar-wrap {
+      flex: 1; height: 8px; background: #21262d;
+      border-radius: 4px; overflow: hidden;
+    }
+    .progress-bar { height: 100%; background: #3fb950; border-radius: 4px; transition: width 0.5s; }
+    .progress-label { font-size: 0.85rem; color: #8b949e; white-space: nowrap; }
+
+    /* ── Ready count ── */
+    .ready-count {
+      margin-top: 1rem; font-size: 0.9rem; color: #8b949e;
+    }
+    .ready-count span { color: #58a6ff; font-weight: 700; }
+
+    /* ── Alert ── */
+    #alert-box {
+      margin-top: 1.2rem; padding: 0.8rem 1rem;
+      background: #4c1616; border: 1px solid #f85149;
+      border-radius: 8px; font-size: 0.88rem; color: #f85149;
+      display: none;
+    }
+    #alert-box.visible { display: block; }
+
+    /* ── Start button (complete state) ── */
+    #start-btn {
+      display: none; width: 100%; margin-top: 2rem;
+      padding: 0.9rem; background: #3fb950; color: #0d1117;
+      font-size: 1.1rem; font-weight: 800; border: none;
+      border-radius: 10px; cursor: pointer; transition: background 0.2s;
+    }
+    #start-btn.visible { display: block; }
+    #start-btn:hover { background: #56d364; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 Hunter Identification</h1>
+  <form method="POST" action="/initialize/cancel" style="margin:0">
+    <button class="cancel-btn" type="submit">✕ Cancel &amp; Skip</button>
+  </form>
+</header>
+
+<div class="main">
+  <div class="phase-label" id="phase-label">WAITING FOR HUNTERS</div>
+  <div class="phase-title" id="phase-title">Touch your gold logo pad once</div>
+  <div class="phase-desc" id="phase-desc">
+    Each hunter should touch the gold logo pad once on their micro:bit.
+    You can let go after the diamond appears — once everyone is ready, Reachy will assign each hunter a secret button code.
+  </div>
+
+  <div class="hunters-grid" id="hunters-grid"></div>
+
+  <div id="prompt-box">
+    <div class="prompt-label">Now entering code</div>
+    <div class="prompt-hunter" id="prompt-hunter">—</div>
+    <div class="prompt-code"   id="prompt-code">— — —</div>
+    <div class="prompt-hint">Press the A and B buttons in the order shown above</div>
+  </div>
+
+  <div class="progress-row">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div class="progress-label" id="progress-label">0 / {{ n_hunters }}</div>
+  </div>
+
+  <div class="ready-count" id="ready-count">
+    Hunters ready: <span id="ready-n">0</span>
+  </div>
+
+  <div id="alert-box" role="alert"></div>
+
+  <button id="start-btn" onclick="startGame()">Start Hunt ▶</button>
+</div>
+
+<script>
+  var N_HUNTERS = {{ n_hunters }};
+  var SESSION   = {{ session | tojson }};
+</script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/static/initialize.js"></script>
+</body>
+</html>

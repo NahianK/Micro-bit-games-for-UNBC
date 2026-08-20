@@ -179,13 +179,103 @@
       color: #8b949e;
     }
     .empty a { color: #f0c040; }
+
+    /* ── Game-over overlay ── */
+    #game-over-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      animation: goFadeIn 0.4s ease;
+    }
+    #game-over-overlay.visible { display: flex; }
+    @keyframes goFadeIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .go-card {
+      background: #161b22;
+      border: 2px solid #f0c040;
+      border-radius: 16px;
+      padding: 2.5rem 3rem;
+      text-align: center;
+      max-width: 460px;
+      width: 90%;
+      box-shadow: 0 0 60px rgba(240,192,64,0.25);
+    }
+    .go-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #f0c040;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+    }
+    .go-subtitle {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-bottom: 1.8rem;
+    }
+    .go-winner-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+      margin-bottom: 0.3rem;
+    }
+    .go-winner-name {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: #f0c040;
+      margin-bottom: 1.8rem;
+    }
+    .go-leaderboard {
+      list-style: none;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .go-leaderboard li {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 0.95rem;
+    }
+    .go-leaderboard li:last-child { border-bottom: none; }
+    .go-rank {
+      width: 1.4rem;
+      text-align: right;
+      font-size: 0.78rem;
+      color: #8b949e;
+    }
+    .go-hunter { flex: 1; font-weight: 700; color: #e6edf3; }
+    .go-finds  { font-size: 0.85rem; color: #8b949e; }
+    .go-finds span { color: #f0c040; font-weight: 700; }
+    .go-reset-btn {
+      padding: 0.6rem 1.8rem;
+      border-radius: 10px;
+      border: 1px solid #f85149;
+      background: transparent;
+      color: #f85149;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+    }
+    .go-reset-btn:hover { background: #4c1616; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🏴 Treasure Hunt <small style="font-size:0.75rem;color:#8b949e;font-weight:400">— Full Version (up to 5 hunters and 5 treasures)</small></h1>
+  <h1>🏴 Treasure Hunt <small style="font-size:0.75rem;color:#8b949e;font-weight:400">— Full Version (up to 8 hunters · 5 treasures)</small></h1>
   <span class="badge badge-err" id="serial-badge">● Disconnected</span>
+  {% if use_reachy %}
+  <span class="badge" id="reachy-badge" style="background:#1a2740;color:#58a6ff;border:1px solid #58a6ff">🤖 Reachy …</span>
+  {% endif %}
   <a class="header-btn" href="/setup">⚙ Setup</a>
   <button class="reset-btn" id="reset-btn">↺ Reset Session</button>
 </header>
@@ -204,12 +294,25 @@
   </div>
 </main>
 
+<!-- Game-over overlay (hidden until all treasures found) -->
+<div id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="go-title">
+  <div class="go-card">
+    <div class="go-title" id="go-title">ALL TREASURES FOUND!</div>
+    <div class="go-subtitle" id="go-subtitle"></div>
+    <div class="go-winner-label">Winner</div>
+    <div class="go-winner-name" id="go-winner">—</div>
+    <ol class="go-leaderboard" id="go-leaderboard"></ol>
+    <button class="go-reset-btn" id="go-reset-btn">↺ Reset / Play Again</button>
+  </div>
+</div>
+
 <!-- Inject server-side config as JS globals -->
 <script>
   window.RSSI_HOT       = {{ rssi_hot }};
   window.RSSI_WARM      = {{ rssi_warm }};
   window.ACTIVE_HUNTERS   = {{ active_hunters | tojson }};
   window.ACTIVE_TREASURES = {{ active_treasures | tojson }};
+  window.USE_REACHY       = {{ 'true' if use_reachy else 'false' }};
 </script>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>

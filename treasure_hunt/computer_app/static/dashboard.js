@@ -149,6 +149,10 @@ function renderSnapshot(snap) {
     const data = snap.treasures ? snap.treasures[tid] : null;
     if (data) updateTreasureCard(tid, data);
   });
+
+  if (snap.game_over && snap.leaderboard) {
+    showGameOver({ leaderboard: snap.leaderboard, total_treasures: treasures.length });
+  }
 }
 
 // ── Socket.IO events ──────────────────────────────────────────────────────────
@@ -165,6 +169,31 @@ socket.on('serial_status', (data) => {
   } else {
     badge.textContent = '● Disconnected' + (data.error ? ': ' + data.error : '');
     badge.className   = 'badge badge-err';
+  }
+});
+
+socket.on('reachy_status', (data) => {
+  const badge = document.getElementById('reachy-badge');
+  if (!badge) return;
+  if (!data.enabled) {
+    badge.style.display = 'none';
+    return;
+  }
+  if (data.available && data.robot_ready) {
+    badge.textContent = '🤖 Reachy ●';
+    badge.style.background = '#1a4731';
+    badge.style.color      = '#3fb950';
+    badge.style.border     = '1px solid #3fb950';
+  } else if (data.available) {
+    badge.textContent = '🤖 Reachy ◌';
+    badge.style.background = '#1a2740';
+    badge.style.color      = '#58a6ff';
+    badge.style.border     = '1px solid #58a6ff';
+  } else {
+    badge.textContent = '🤖 Reachy ✕';
+    badge.style.background = '#4c1616';
+    badge.style.color      = '#f85149';
+    badge.style.border     = '1px solid #f85149';
   }
 });
 
@@ -231,7 +260,41 @@ socket.on('redirect', (data) => {
   window.location.href = data.url;
 });
 
-// ── Reset button ──────────────────────────────────────────────────────────────
+// ── Game-over overlay ─────────────────────────────────────────────────────────
+
+function showGameOver(data) {
+  const leaderboard = data.leaderboard || [];
+  const total = data.total_treasures || 0;
+
+  // Winner = first entry (already sorted desc by finds)
+  const winner = leaderboard.length > 0 ? leaderboard[0] : null;
+  document.getElementById('go-winner').textContent =
+      winner && winner.finds > 0 ? winner.hunter_id : '—';
+  document.getElementById('go-subtitle').textContent =
+      total + (total === 1 ? ' treasure' : ' treasures') + ' discovered!';
+
+  const ol = document.getElementById('go-leaderboard');
+  ol.innerHTML = '';
+  leaderboard.forEach((entry, i) => {
+    const li = document.createElement('li');
+    li.innerHTML =
+        `<span class="go-rank">${i + 1}.</span>` +
+        `<span class="go-hunter">${entry.hunter_id}</span>` +
+        `<span class="go-finds"><span>${entry.finds}</span> found</span>`;
+    ol.appendChild(li);
+  });
+
+  const overlay = document.getElementById('game-over-overlay');
+  overlay.classList.add('visible');
+}
+
+socket.on('game_over', showGameOver);
+
+document.getElementById('go-reset-btn').addEventListener('click', () => {
+  if (confirm('Reset session and play again?')) {
+    socket.emit('reset_session');
+  }
+});
 document.getElementById('reset-btn').addEventListener('click', () => {
   if (confirm('Reset session and return to setup?')) {
     socket.emit('reset_session');
