@@ -47,28 +47,38 @@ def health():
 
 def init():
     """
-    POST /init — full Reachy session bring-up on the robot:
+    POST /init - full Reachy session bring-up on the robot:
     wake, speaker volume / voice path, and camera tracking.
 
     Returns the parsed JSON body (same shape as /health plus init flags),
-    or None on any failure. Blocking — call from a background thread at app
+    or None on any failure. Blocking - call from a background thread at app
     start, or once when a Reachy-enabled session begins.
     """
     if not getattr(config, 'USE_REACHY', False):
         return None
-    # Init can preload WAVs and start the tracker; allow longer than health.
-    timeout = max(float(config.REACHY_HEALTH_TIMEOUT_S), 20.0)
-    try:
-        req = urllib.request.Request(
-            _url('/init'), data=b'{}', headers=_headers(), method='POST')
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.loads(r.read())
-    except Exception as exc:
-        global _warned
-        if not _warned:
-            print('[reachy] init failed: {}'.format(exc))
-            _warned = True
-        return None
+    timeout = float(getattr(config, 'REACHY_INIT_TIMEOUT_S', 90.0))
+    last_exc = None
+    for attempt in range(2):
+        try:
+            req = urllib.request.Request(
+                _url('/init'), data=b'{}', headers=_headers(), method='POST')
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read())
+        except Exception as exc:
+            last_exc = exc
+            # Retry once on timeout / transient URL errors (hotspot flaps).
+            reason = str(exc).lower()
+            is_timeout = 'timed out' in reason or 'timeout' in reason
+            if attempt == 0 and is_timeout:
+                print('[reachy] init timed out; retrying once...')
+                continue
+            break
+    global _warned
+    if not _warned:
+        print('[reachy] init failed: {}'.format(last_exc))
+        _warned = True
+    return None
+
 
 
 def event(event_type, **data):

@@ -1,0 +1,7 @@
+{
+  "_comment": "Copy to reachy_cli.config.json and set host to your robot (e.g. pollen@192.168.1.65 or pollen@reachy-mini.local).",
+
+  "host": "pollen@192.168.1.65",
+  "agent_port": 7000,
+  "remote_dir": "/home/pollen/treasure_hunt_reachy"
+}

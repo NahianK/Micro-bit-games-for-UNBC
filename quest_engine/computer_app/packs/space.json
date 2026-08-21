@@ -1,0 +1,171 @@
+{
+  "id": "space",
+  "title": "Derelict Station Kepler-9",
+  "blurb": "A repair crew boards a dead station. Same verbs and the same step order as the dragon pack, which is the point: proof that the engine is theme-neutral.",
+  "voice": "en_US-amy-medium",
+
+  "_authoring_notes": [
+    "This pack is deliberately a step-for-step mirror of dragon.json. If you",
+    "are writing a third pack, copy either one and replace only the text, the",
+    "'whiteboard' lines and the sfx names.",
+    "See dragon.json for what each field does."
+  ],
+
+  "steps": [
+    {
+      "id": "intro",
+      "type": "say",
+      "say": "Repair crew, listen up. Station Kepler-9 went dark eleven days ago and stopped answering. You are the closest crew we have. Get aboard, get the power back, and find out what happened in there.",
+      "sfx": "alarm"
+    },
+    {
+      "id": "muster",
+      "type": "challenge",
+      "verb": "HOLD",
+      "arg": 3000,
+      "require": "all",
+      "whiteboard": "HOLD THE LOGO",
+      "say": "Every suit has a palm contact. Press your thumb to the golden pad and hold it. The airlock reads all of you at once, so nobody let go early.",
+      "on_pass": "Contacts green across the board. The inner door is cycling.",
+      "on_fail": "The panel stays red. One contact dropped out.",
+      "say_again": "Try it again. Thumb flat on the pad, and hold.",
+      "attempts": 2
+    },
+    {
+      "id": "oath",
+      "type": "challenge",
+      "verb": "BTNA",
+      "arg": 3,
+      "require": "all",
+      "whiteboard": "PRESS A x 3",
+      "say": "Suit check before we go in. Tap your chest console three times to run the seal test. Press the A button three times!",
+      "on_pass": "Three green lights each. Seals are good, air is good.",
+      "on_fail": "Somebody skipped a tap. Nobody goes through that door on an unchecked seal."
+    },
+    {
+      "id": "warcry",
+      "type": "challenge",
+      "verb": "CLAP",
+      "arg": 2,
+      "require": "majority",
+      "whiteboard": "CLAP x 2",
+      "say": "The corridor is full of frozen debris and I cannot see past it. Your suits carry a sonic pulse, and it triggers on a sharp sound. Two hard claps to clear the way. Clap twice!",
+      "on_pass": "The pulse hits and the debris breaks apart into glittering dust.",
+      "on_fail": "Not sharp enough. The pulse never fires and the corridor stays blocked.",
+      "sfx_pass": "alarm"
+    },
+    {
+      "id": "tracks",
+      "type": "challenge",
+      "verb": "TILTL",
+      "arg": 1,
+      "require": "all",
+      "whiteboard": "TILT LEFT",
+      "say": "Junction ahead. The power conduit runs off to port, and the reactor is at the other end of it. Tilt your console to the left to follow the conduit.",
+      "on_pass": "You track the conduit down the port passage.",
+      "on_fail": "You take the wrong branch and end up back where you started."
+    },
+    {
+      "id": "cauldron",
+      "type": "challenge",
+      "verb": "LEVEL",
+      "arg": 2000,
+      "require": "all",
+      "whiteboard": "HOLD FLAT AND STILL",
+      "say": "There is a coolant canister here, and it is the only one aboard. In zero gravity it will tumble if you so much as breathe on it. Hold your console dead level and completely still.",
+      "on_pass": "Steady hands. The canister is secure.",
+      "on_fail": "It tips, and coolant sprays out and freezes on the deck.",
+      "say_again": "Reset. Level, still, and slow.",
+      "attempts": 2
+    },
+    {
+      "id": "wolves",
+      "type": "challenge",
+      "verb": "SHAKE",
+      "win": 5000,
+      "arg": 2,
+      "require": "majority",
+      "whiteboard": "SHAKE HARD x 2",
+      "say": "Something is wrong with the maintenance drones. They have latched onto your arms and they are trying to weld. Shake them off! Hard, twice!",
+      "on_pass": "The drones tumble away down the corridor, sparking.",
+      "on_fail": "They hold on, and you lose ground backing up the passage."
+    },
+    {
+      "id": "shields",
+      "type": "challenge",
+      "verb": "FACEDN",
+      "win": 4000,
+      "require": "all",
+      "whiteboard": "TURN IT FACE DOWN",
+      "say": "Radiation spike, and it is coming from the reactor housing. Shields down over your visors. Turn your console face down, right now!",
+      "on_pass": "Shields hold. The spike passes and your dosimeters settle.",
+      "on_fail": "One shield went down late. That crew member is going to need a medical scan."
+    },
+    {
+      "id": "champion",
+      "type": "challenge",
+      "verb": "BTNB",
+      "arg": 2,
+      "who": "random",
+      "require": "all",
+      "whiteboard": "CHOSEN CREW: PRESS B x 2",
+      "say": "The manual override is inside the housing, and only one of you can fit. Check your console. If your light is on, that is you. Send the ready signal twice. Press the B button, twice. Everyone else, hold position.",
+      "on_pass": "Ready signal received. One of you squeezes into the housing.",
+      "on_fail": "No ready signal. Mission Control is waiting and the reactor is not."
+    },
+    {
+      "id": "bellow",
+      "type": "challenge",
+      "verb": "SHOUT",
+      "arg": 1000,
+      "require": "majority",
+      "whiteboard": "SHOUT AND KEEP SHOUTING",
+      "say": "Comms are down to voice only and the interference is terrible. To reach the bridge you will have to shout over it. All of you, shout, and keep shouting until I say stop.",
+      "on_pass": "Your voices punch through. The bridge hears you.",
+      "on_fail": "The interference swallows it. Nobody on the bridge hears a thing."
+    },
+    {
+      "id": "bearing",
+      "type": "challenge",
+      "verb": "POINT",
+      "arg": "NE",
+      "requires": "compass",
+      "require": "majority",
+      "whiteboard": "POINT NORTH-EAST",
+      "say": "To call for pickup we need the dish aligned. Mission Control is on bearing zero four five, north-east. Point your console north-east and hold it there.",
+      "on_pass": "Alignment locked. The dish swings round and the carrier signal comes up.",
+      "on_fail": "The array will not lock. Every console is reading a different bearing."
+    },
+    {
+      "id": "hoard",
+      "type": "challenge",
+      "verb": "NEAR",
+      "requires": "prop",
+      "require": "any",
+      "whiteboard": "HUNT: MORE LIGHTS = CLOSER",
+      "say": "The flight recorder is still transmitting from somewhere on this deck, and it holds the answer to what happened here. Watch your console lights. More lights means you are closer. Go and find it.",
+      "on_pass": "You pull it out from behind a bulkhead, still blinking after eleven days.",
+      "on_fail": "The signal fades out before you can pin it down."
+    },
+    {
+      "id": "finale",
+      "type": "challenge",
+      "verb": "SHAKE",
+      "arg": 3,
+      "win": 5000,
+      "require": "all",
+      "whiteboard": "ALL TOGETHER: SHAKE x 3",
+      "say": "The reactor is going critical and the manual crank is jammed solid. All of you, on the crank, three full turns, everything you have. Shake your consoles! Three times, together!",
+      "on_pass": "The crank gives. The coolant floods in and the reactor pulls back from the edge.",
+      "on_fail": "It does not budge, and the warning tone climbs.",
+      "say_again": "We have seconds. All together. Three turns, on my mark!",
+      "attempts": 3,
+      "sfx": "alarm"
+    },
+    {
+      "id": "outro",
+      "type": "say",
+      "say": "Reactor stable. Lights coming up all along the spine of the station. Kepler-9 is alive again, and there is a shuttle on its way for you. Good work, crew. Eleven days of silence, and you ended it in twenty minutes."
+    }
+  ]
+}

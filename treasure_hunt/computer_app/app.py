@@ -13,6 +13,12 @@ import serial_reader
 import reachy_client
 import registration as reg_module
 
+# Brief grace after a successful health probe so one timeout during agent /init
+# does not flap the setup/dashboard Reachy badge to unreachable.
+_REACHY_STATUS_GRACE_S = 15.0
+_reachy_last_ok = None
+_reachy_last_ok_at = 0.0
+
 # ---------------------------------------------------------------------------
 # Game state
 # ---------------------------------------------------------------------------
@@ -121,18 +127,27 @@ socketio = SocketIO(app, cors_allowed_origins='*', async_mode='threading')
 
 def _reachy_status(health_body=None):
     """Return a small dict with robot availability info."""
+    global _reachy_last_ok, _reachy_last_ok_at
     if not USE_REACHY:
         return {'enabled': False}
     h = health_body if health_body is not None else reachy_client.health()
     if h is None:
+        # One timed-out probe while the agent is in /init should not flip the UI.
+        if (_reachy_last_ok is not None and
+                (time.time() - _reachy_last_ok_at) < _REACHY_STATUS_GRACE_S):
+            return dict(_reachy_last_ok)
         return {'enabled': True, 'available': False, 'error': 'agent unreachable'}
-    return {
+    status = {
         'enabled':          True,
         'available':        h.get('status') == 'ok',
         'robot_ready':      h.get('robot_ready', False),
         'tracker_running':  h.get('tracker_running', False),
         'version':          h.get('version', '?'),
     }
+    if status['available']:
+        _reachy_last_ok = status
+        _reachy_last_ok_at = time.time()
+    return status
 
 
 def _reachy_full_init():

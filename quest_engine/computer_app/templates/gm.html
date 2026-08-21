@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<!--
+  Quest Engine gamemaster console.
+
+  Design brief: the gamemaster is talking to a room full of children while
+  reading this, so it has to be readable at a glance from a metre away. The
+  whiteboard line is the biggest thing on screen because it is the one thing
+  they have to say out loud and write up. Everything else is support.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quest Engine - Gamemaster</title>
+<style>
+  :root {
+    --bg: #12141a;
+    --panel: #1b1e27;
+    --panel-2: #232733;
+    --line: #2e3342;
+    --ink: #e8eaf0;
+    --dim: #8b93a7;
+    --ok: #4ade80;
+    --bad: #f87171;
+    --warn: #fbbf24;
+    --live: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 17px; margin: 0; font-weight: 600; }
+  .privacy {
+    font-size: 12px; color: var(--warn); border: 1px solid var(--warn);
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .spacer { flex: 1; }
+  .pill {
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: var(--panel-2); color: var(--dim); border: 1px solid var(--line);
+  }
+  .pill.good { color: var(--ok); border-color: #2b6b46; }
+  .pill.bad  { color: var(--bad); border-color: #6b2b2b; }
+
+  main { padding: 16px 20px 40px; display: grid; gap: 16px;
+         grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line);
+           border-radius: 10px; padding: 14px 16px; }
+  .panel h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .09em;
+              text-transform: uppercase; color: var(--dim); font-weight: 600; }
+
+  /* Controls */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600; color: var(--ink); cursor: pointer;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 15px;
+  }
+  button:hover { border-color: #4a5168; background: #2b3040; }
+  button.primary { background: #1d4ed8; border-color: #1d4ed8; }
+  button.good { background: #15803d; border-color: #15803d; }
+  button.bad  { background: #b91c1c; border-color: #b91c1c; }
+  button.ghost { background: transparent; }
+  select, input {
+    font: inherit; color: var(--ink); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  }
+  label { font-size: 12px; color: var(--dim); display: block; margin-bottom: 4px; }
+
+  /* Current step */
+  .stepmeta { display: flex; gap: 10px; align-items: baseline;
+              color: var(--dim); font-size: 13px; margin-bottom: 6px; }
+  .whiteboard {
+    font-size: 34px; font-weight: 700; letter-spacing: .02em;
+    background: #0d0f14; border: 2px dashed #3b4256;
+    border-radius: 10px; padding: 16px; text-align: center; margin: 6px 0 12px;
+  }
+  .script { font-size: 19px; line-height: 1.5; }
+  .verbline { margin-top: 10px; color: var(--live); font-size: 14px;
+              font-family: ui-monospace, Consolas, monospace; }
+  .countdown { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* Roster */
+  .wands { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+           gap: 10px; }
+  .wand { background: var(--panel-2); border: 1px solid var(--line);
+          border-radius: 9px; padding: 10px; text-align: center; }
+  .wand.off { opacity: .38; }
+  .wand.ok  { border-color: var(--ok); }
+  .wand.bad { border-color: var(--bad); }
+  .wand .who { font-size: 20px; font-weight: 700; }
+  .wand .st { font-size: 12px; color: var(--dim); min-height: 1.4em; }
+  .wand .ms { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .wand .fastest { color: var(--warn); font-size: 11px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+
+  #log { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px;
+         max-height: 300px; overflow-y: auto; color: var(--dim); }
+  #log div { padding: 1px 0; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr));
+           gap: 10px; align-items: end; }
+  .banner { border-radius: 8px; padding: 9px 12px; font-size: 13px;
+            margin-bottom: 12px; display: none; }
+  .banner.show { display: block; }
+  .banner.warn { background: #3a2e0c; border: 1px solid var(--warn); color: #fde68a; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Quest Engine</h1>
+  <span class="privacy">Keep this screen away from the children</span>
+  <span class="spacer"></span>
+  <span class="pill" id="pill-link">link ...</span>
+  <span class="pill" id="pill-audio">audio ...</span>
+  <span class="pill" id="pill-robot">robot ...</span>
+  <span class="pill" id="pill-status">idle</span>
+</header>
+
+<main>
+  <div>
+    <!-- ============================ CURRENT STEP ==================== -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="banner warn" id="banner-voices"></div>
+
+      <div class="stepmeta">
+        <span id="step-counter">no scenario running</span>
+        <span id="step-id"></span>
+        <span class="spacer"></span>
+        <span class="countdown" id="countdown"></span>
+      </div>
+
+      <div class="whiteboard" id="whiteboard">&mdash;</div>
+      <div class="script" id="script">
+        Press Start when the children are ready. Read each line aloud, or let the
+        narrator do it if you have built the voices.
+      </div>
+      <div class="verbline" id="verbline"></div>
+    </div>
+
+    <!-- ============================ WANDS =========================== -->
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Wands</h2>
+      <div class="wands" id="wands"></div>
+    </div>
+
+    <!-- ============================ CONTROLS ======================== -->
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Run</h2>
+      <div class="controls">
+        <button class="primary" data-action="start">Start</button>
+        <button data-action="pause">Pause</button>
+        <button data-action="resume">Resume</button>
+        <button class="bad" data-action="stop">Stop</button>
+        <button class="ghost" data-action="skip">Skip step</button>
+        <button class="good" data-action="pass">Force pass</button>
+        <button class="bad" data-action="fail">Force fail</button>
+        <button class="ghost" data-action="idle">Stand wands down</button>
+      </div>
+      <p style="color:var(--dim);font-size:12.5px;margin:10px 0 0">
+        Pause takes effect at the end of the current step, so a child is never
+        left holding a half-finished challenge. Force pass is there for when a
+        child clearly did the thing but their wand disagreed.
+      </p>
+    </div>
+
+    <!-- ============================ IMPROVISE ======================= -->
+    <div class="panel">
+      <h2>Send one challenge by hand</h2>
+      <div class="grid2">
+        <div>
+          <label for="m-verb">Verb</label>
+          <select id="m-verb">
+            {% for verb, kind, default, sensor, label in verbs %}
+            <option value="{{ verb }}" data-default="{{ default }}">{{ verb }} - {{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="m-arg">Arg (count / ms / bearing)</label>
+          <input id="m-arg" placeholder="3">
+        </div>
+        <div>
+          <label for="m-win">Window ms</label>
+          <input id="m-win" placeholder="default">
+        </div>
+        <div>
+          <label for="m-who">Who</label>
+          <select id="m-who">
+            <option value="all">everyone online</option>
+            <option value="random">one at random</option>
+            {% for p in range(1, max_players + 1) %}
+            <option value="{{ p }}">P{{ p }} only</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div><button class="primary" id="m-send">Send</button></div>
+      </div>
+      <p style="color:var(--dim);font-size:12.5px;margin:10px 0 0">
+        Good for warming children up before the story starts, or for a quick
+        hardware check. POINT accepts a compass name such as NE.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================== SIDEBAR ========================= -->
+  <div>
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Session</h2>
+      <div class="grid2">
+        <div>
+          <label for="sel-pack">Scenario</label>
+          <select id="sel-pack"></select>
+        </div>
+        <div>
+          <label for="sel-diff">Difficulty</label>
+          <select id="sel-diff">
+            {% for d in difficulties %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <p style="color:var(--dim);font-size:12.5px;margin:10px 0 0" id="pack-blurb"></p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Scoreboard</h2>
+      <table>
+        <thead><tr><th>Wand</th><th>Done</th><th>Missed</th><th>Best</th></tr></thead>
+        <tbody id="scores"><tr><td colspan="4" style="color:var(--dim)">nothing yet</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/static/gm.js"></script>
+</body>
+</html>

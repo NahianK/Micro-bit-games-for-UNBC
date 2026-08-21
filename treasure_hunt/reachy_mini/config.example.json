@@ -1,0 +1,33 @@
+{
+  "_comment": "Copy this file to config.json and edit. Never commit config.json — it may contain a token.",
+
+  "bind_host": "0.0.0.0",
+  "bind_port": 7000,
+
+  "_token_comment": "Set a shared secret to authenticate the game host. Leave empty to allow unauthenticated access (fine on a trusted LAN).",
+  "token": "",
+
+  "narrate": true,
+  "emote": true,
+  "wobble": true,
+  "speak_pad_s": 0.35,
+
+  "track": false,
+  "_track_comment": "If true, camera gaze starts when the agent boots. Even when false, POST /init from the game host starts tracking for a Reachy-enabled session.",
+  "tracker_fps": 8.0,
+  "tracker_look_s": 0.7,
+  "tracker_deadzone_px": 60,
+  "tracker_min_face_px": 48,
+  "tracker_lost_s": 4.0,
+  "tracker_recentre_s": 12.0,
+  "tracker_settle_s": 0.35,
+
+  "_audio_comment": "Absolute path to the audio/ folder on the robot.",
+  "audio_dir": "/home/pollen/treasure_hunt_reachy/audio",
+
+  "_robot_timeout_comment": "Seconds to wait for the daemon WebRTC media connection.",
+  "robot_timeout_s": 15.0,
+
+  "_volume_comment": "Speaker output 0-100. Applied when the agent starts.",
+  "speaker_volume": 100
+}

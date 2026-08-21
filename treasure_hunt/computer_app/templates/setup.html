@@ -173,19 +173,24 @@
       toggleNote();
     }
 
-    // Live poll for agent availability (every 5 seconds)
+    // Live poll for agent availability (every 5 seconds).
+    // Require two consecutive failures before flipping to offline so a single
+    // health timeout during agent /init does not uncheck Use Reachy.
     {% if reachy_status.enabled %}
+    var reachyFailStreak = 0;
     function pollReachyHealth() {
       fetch('/api/reachy_health')
         .then(function(r) { return r.json(); })
         .then(function(d) {
           var row = document.getElementById('reachy-status-row');
-          var msg = document.getElementById('reachy-status-msg');
           if (!row) return;
           if (d.available) {
+            reachyFailStreak = 0;
             row.innerHTML = '<span class="dot dot-ok"></span><span>Agent online — robot_ready=' + d.robot_ready + '</span>';
             if (cb) cb.disabled = false;
           } else {
+            reachyFailStreak += 1;
+            if (reachyFailStreak < 2) return;
             row.innerHTML = '<span class="dot dot-err"></span><span>' + (d.error || 'Agent offline') + '</span>';
             if (cb) { cb.disabled = true; cb.checked = false; }
           }

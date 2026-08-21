@@ -1,0 +1,38 @@
+# Quest Engine - computer side dependencies.
+#
+# Phase 1 (bench console) needs only pyserial.
+# Phase 2 (gamemaster console + audio) needs the rest.
+#
+#     pip install -r requirements.txt
+
+# --- Phase 1: bench console -------------------------------------------------
+pyserial>=3.5
+
+# --- Phase 2: gamemaster web console ---------------------------------------
+flask>=3.0.0
+flask-socketio>=5.3.6
+
+# --- Phase 2: audio playback ------------------------------------------------
+# pygame is used only as a mixer for pre-rendered WAV files, which is why this
+# still works on a Raspberry Pi B+. Nothing is synthesised at runtime.
+pygame>=2.5.0
+
+# --- Optional: Reachy Mini narrator robot -----------------------------------
+# Only needed with USE_ROBOT = True in config.py. Without these the game runs
+# exactly as before, narrating through the computer's own speakers.
+#
+# The SDK talks to the daemon on the robot; it does not need to run on it.
+# reachy-mini>=1.8
+#
+# Camera presence tracking, USE_TRACKER = True. opencv-python-headless is the
+# right choice on a Pi or a server; plain opencv-python if you also want to
+# open a preview window while calibrating.
+# opencv-python>=4.9
+# numpy>=1.24
+
+# --- Authoring only (NOT needed on the machine that runs the game) ----------
+# tools/build_voice.py renders narration text to WAV once, ahead of time.
+# Preferred: Piper (offline neural TTS, much better voices), installed
+# separately as a binary from https://github.com/rhasspy/piper
+# Fallback, pure Python, robotic but serviceable:
+# pyttsx3>=2.90

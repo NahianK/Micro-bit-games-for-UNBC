@@ -15,6 +15,7 @@ Designed for easy handoff — every file is commented for the next developer.
 📁 hide_and_seek/           ← Hide and Seek (full version, 1–5 hiders)
 📁 treasure_hunt_test/      ← Treasure Hunt (3 micro:bits, test version)
 📁 treasure_hunt/           ← Treasure Hunt (full version, 1–5 treasures)
+📁 quest_engine/            ← Multi-Sensor Quest (6 micro:bits, V2 only, no screens)
 ```
 
 Each folder contains:
@@ -138,6 +139,38 @@ two-step action to prevent false positives.
 set how many hunters and treasures are active.
 
 **⚠️ Recalibrate each session** — hiding spots change every round.
+
+### 🐉 Multi-Sensor Quest
+
+The odd one out. Not a proximity game: a narrated cooperative adventure that
+uses **every sensor on the V2** — buttons, logo touch, accelerometer, compass and
+microphone — with radio proximity as just one challenge among many.
+
+A narrator reads an instruction, each child's wand arms exactly the sensor that
+instruction needs, and reports back whether they did it and how fast. The
+children see no screen at all: only LED glyphs, speaker blips and a whiteboard.
+
+| Version | Micro:bits | Setup |
+|---|---|---|
+| `quest_engine/` | 6 | 1 bridge (USB) + 5 wands, or + 4 wands + 1 hidden prop |
+
+**Two things make it different from the other games:**
+
+- **micro:bit V2 is mandatory.** It needs the microphone, logo touch and speaker.
+- **The bridge is two-way.** Every other game here is uplink-only — the
+  micro:bit `print()`s and the computer listens. This one also reads the USB
+  serial port, so the computer can push challenges out to the wands. That is the
+  one piece of new plumbing, and `quest_engine/README.md` has a five-minute
+  bench test to prove it before you rely on it.
+
+Two swappable story packs ship with it — medieval dragon and derelict space
+station — over the same challenge sequence.
+
+**Optional narrator robot.** A [Reachy Mini](https://pollen-robotics.com/reachy-mini/)
+can front the narration and turn its head towards whoever it can see, giving the
+children something to look at instead of a disembodied voice. It scores nothing
+— every answer still comes from a wand over radio — so it is additive and
+switched off by default. See Phase 3 in `quest_engine/README.md`.
 
 ---
 
@@ -263,8 +296,40 @@ Built and tested at UNBC, Aug 2026.
 Initial calibration data collected indoors with micro:bit v2 hardware.
 Designed to be handed off to the next developer with minimal learning curve.
 
-**Next steps for future developers:**
-- Outdoor recalibration (new RSSI reference table)
-- Multiplayer Bluetooth relay to eliminate USB tether
-- Scoring persistence (save tallies between sessions)
-- Add sound / buzzer feedback on find events
+---
+
+## Handoff / final status (Aug 2026)
+
+This repo is the full UNBC micro:bit collection: proximity games **plus**
+`quest_engine/` (Multi-Sensor Quest). Source, firmware, packs, whiteboard docs,
+and tools are meant to ship; large local TTS binaries are not.
+
+| Included | Not in git (download / generate locally) |
+|---|---|
+| Game folders, firmware, Flask apps, READMEs | `piper/` Windows TTS binary + `espeak-ng-data` |
+| `quest_engine/` packs, whiteboard, simulators | Piper `.onnx` voice models (`quest_engine/tools/voices/`) |
+| `treasure_hunt/reachy_mini/` agent + example configs | Local `reachy_cli.config.json` / `config.json`, `.venv/` |
+| Calibration notes, Pi serial tips | Debug logs, `sessions.json`, OS junk |
+
+**Quest Engine status**
+
+- Cooperative single-group play with per-challenge countdown is implemented.
+- A separate **team mode** (split teams / team countdown feature) was discussed
+  but **not implemented** — do not expect team UI or team scoring in this tree.
+- Software simulators cover firmware logic, packs, and optional robot code.
+- **Still needs a real hardware bench test** (Phase 1 in `quest_engine/README.md`)
+  before a live session: two-way USB bridge, radio roster, sensors, then audio /
+  optional Reachy Mini.
+
+**Treasure Hunt + Reachy**
+
+- Host registration and Reachy client hooks are present; agent health polling is
+  more tolerant of hotspot / `/init` delays. Point `REACHY_AGENT_HOST` at your
+  robot and copy the example configs under `treasure_hunt/reachy_mini/`.
+
+**Next steps for future developers**
+
+- Outdoor RSSI recalibration (new reference table)
+- Quest Engine Phase 1 bench test on real V2 boards, then build Piper voices
+- Optional: implement team mode if a session design needs it
+- Scoring persistence between sessions; more find-event audio feedback

@@ -1,0 +1,177 @@
+{
+  "id": "dragon",
+  "title": "The Wyrm of Ashfell",
+  "blurb": "A band of squires is sent to drive a dragon out of the valley. Medieval skin over the standard verb set.",
+  "voice": "en_GB-cori-high",
+
+  "_authoring_notes": [
+    "Every step needs a unique 'id'. That id is also the WAV filename, so keep",
+    "ids lowercase with underscores.",
+    "'say' is read aloud before the challenge opens. 'on_pass' and 'on_fail'",
+    "are read afterwards. 'say_again' is used on a retry when attempts > 1.",
+    "'whiteboard' is the short version the gamemaster writes up for the kids.",
+    "'require': all | any | majority | a number.",
+    "'who': all | random | a list like [1, 3].",
+    "'requires': compass | prop - the step is skipped unless the matching flag",
+    "is enabled in config.py, so you can ship steps you are not set up for.",
+    "After editing text here, re-run tools/build_voice.py to rebuild the audio."
+  ],
+
+  "steps": [
+    {
+      "id": "intro",
+      "type": "say",
+      "say": "Squires, gather round. For three nights the Wyrm of Ashfell has burned the fields, and the village has no one left to send but you. Take up your blades. Tonight we drive it back into the mountain.",
+      "sfx": "roar"
+    },
+    {
+      "id": "muster",
+      "type": "challenge",
+      "verb": "HOLD",
+      "arg": 3000,
+      "require": "all",
+      "whiteboard": "HOLD THE LOGO",
+      "say": "Every blade carries a rune. Press your thumb to the golden logo and hold it until the rune wakes. All of you together, or the spell will not take.",
+      "on_pass": "The runes flare. Your blades are awake.",
+      "on_fail": "The runes stay cold. Someone let go too soon.",
+      "say_again": "Again. Thumb on the logo, and hold it steady this time.",
+      "attempts": 2
+    },
+    {
+      "id": "oath",
+      "type": "challenge",
+      "verb": "BTNA",
+      "arg": 3,
+      "require": "all",
+      "whiteboard": "PRESS A x 3",
+      "say": "Now swear the oath. Strike your shield three times with the flat of your blade. Press the A button three times!",
+      "on_pass": "Three strikes, three times sworn. The oath is bound.",
+      "on_fail": "That was not three. An oath half sworn is no oath at all."
+    },
+    {
+      "id": "warcry",
+      "type": "challenge",
+      "verb": "CLAP",
+      "arg": 2,
+      "require": "majority",
+      "whiteboard": "CLAP x 2",
+      "say": "The Wyrm hunts by sound, so we will give it something to hear. On my word, two great claps, loud as thunder. Clap twice!",
+      "on_pass": "The valley echoes. Somewhere in the dark, something enormous turns to look at you.",
+      "on_fail": "Too thin. It did not even stir.",
+      "sfx_pass": "roar"
+    },
+    {
+      "id": "tracks",
+      "type": "challenge",
+      "verb": "TILTL",
+      "arg": 1,
+      "require": "all",
+      "whiteboard": "TILT LEFT",
+      "say": "Claw marks in the mud, deeper on one side. The trail bends away to the left. Tilt your blade to the left to follow it.",
+      "on_pass": "You follow the marks up towards the treeline.",
+      "on_fail": "You lose the trail in the dark and have to circle back."
+    },
+    {
+      "id": "cauldron",
+      "type": "challenge",
+      "verb": "LEVEL",
+      "arg": 2000,
+      "require": "all",
+      "whiteboard": "HOLD FLAT AND STILL",
+      "say": "The witch of Ashfell left you one gift: a cauldron of dragonsbane, filled to the brim. Carry it flat. If you spill a drop it is wasted. Hold your blade level and perfectly still.",
+      "on_pass": "Not a drop spilled. The dragonsbane is ready.",
+      "on_fail": "It slops over the rim and hisses into the grass.",
+      "say_again": "Steady. Flat and level, and breathe.",
+      "attempts": 2
+    },
+    {
+      "id": "wolves",
+      "type": "challenge",
+      "verb": "SHAKE",
+      "arg": 2,
+      "win": 5000,
+      "require": "majority",
+      "whiteboard": "SHAKE HARD x 2",
+      "say": "Wolves! The Wyrm keeps them the way a farmer keeps dogs, and they have your scent. Shake them off your arm! Shake your blade, hard, twice!",
+      "on_pass": "They scatter back into the trees, yelping.",
+      "on_fail": "They cling on, snapping, and drive you back a dozen paces."
+    },
+    {
+      "id": "shields",
+      "type": "challenge",
+      "verb": "FACEDN",
+      "win": 4000,
+      "require": "all",
+      "whiteboard": "TURN IT FACE DOWN",
+      "say": "Fire! Above you, and coming fast. Shields up, every one of you. Turn your blade face down over your head, now!",
+      "on_pass": "The flame breaks over your shields and rolls away. You are singed, but standing.",
+      "on_fail": "One shield too slow. Somebody is going to need a new cloak."
+    },
+    {
+      "id": "champion",
+      "type": "challenge",
+      "verb": "BTNB",
+      "arg": 2,
+      "who": "random",
+      "require": "all",
+      "whiteboard": "CHOSEN SQUIRE: PRESS B x 2",
+      "say": "One of you must go forward alone. Look at your blade. If your rune is lit, you are the chosen one. Sound your horn twice. Press the B button, twice. Everyone else, stand fast and hold the line.",
+      "on_pass": "The horn rings out across the valley, and the chosen squire steps into the open.",
+      "on_fail": "No horn sounds. The moment passes, and the Wyrm keeps circling."
+    },
+    {
+      "id": "bellow",
+      "type": "challenge",
+      "verb": "SHOUT",
+      "arg": 1000,
+      "require": "majority",
+      "whiteboard": "SHOUT AND KEEP SHOUTING",
+      "say": "It bellows down at you, and a bellow must be answered. All of you now, shout back, and do not stop until I say. Shout!",
+      "on_pass": "Your voices hold. The Wyrm falters in the air, unsettled.",
+      "on_fail": "Your shout dies away too soon and the bellow rolls right over it."
+    },
+    {
+      "id": "bearing",
+      "type": "challenge",
+      "verb": "POINT",
+      "arg": "NE",
+      "requires": "compass",
+      "require": "majority",
+      "whiteboard": "POINT NORTH-EAST",
+      "say": "It has gone to ground. Listen. The scraping is coming from the north-east, up towards the old mine. Point your blade north-east and hold it there.",
+      "on_pass": "Every blade swings to the same bearing. That is where it went.",
+      "on_fail": "Your blades point five different ways and the sound fades."
+    },
+    {
+      "id": "hoard",
+      "type": "challenge",
+      "verb": "NEAR",
+      "requires": "prop",
+      "require": "any",
+      "whiteboard": "HUNT: MORE LIGHTS = CLOSER",
+      "say": "Its hoard is hidden somewhere close, and buried in it is an egg. Watch the lights on your blade. The more of them that glow, the nearer you are. Go and find it.",
+      "on_pass": "You dig it out of the ash: an egg the size of a helmet, and warm to the touch.",
+      "on_fail": "The hoard stays hidden. Perhaps that is for the best."
+    },
+    {
+      "id": "finale",
+      "type": "challenge",
+      "verb": "SHAKE",
+      "arg": 3,
+      "win": 5000,
+      "require": "all",
+      "whiteboard": "ALL TOGETHER: SHAKE x 3",
+      "say": "This is the moment. It comes down out of the smoke with its wings folded, straight at you. Three strikes, all of you together, with everything you have left. Shake your blades! Three times!",
+      "on_pass": "Three blades bite home at once. The Wyrm screams, turns, and runs for the mountain.",
+      "on_fail": "The strikes come ragged and it slips past you.",
+      "say_again": "It is turning for another pass. Together this time. Three strikes, on my word!",
+      "attempts": 3,
+      "sfx": "roar"
+    },
+    {
+      "id": "outro",
+      "type": "say",
+      "say": "It is gone. Over the ridge, up into the cloud, and away. The fields are still burning but the village is standing, and it is standing because of you. Lower your blades, squires. Ashfell will remember this night."
+    }
+  ]
+}

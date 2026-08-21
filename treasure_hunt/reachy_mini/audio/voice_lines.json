@@ -1,0 +1,86 @@
+{
+  "_voice": "en_US-amy-medium",
+  "_comment": "American English female (Piper en_US-amy-medium). Run build_voice.py to render WAVs. Find announcements are composed as fragments (found_pre + hunter_N + found_post_TN) so we do not pre-render every hunter×treasure combo.",
+
+  "fragments": [
+    {"id": "hunter_1", "text": "Hunter one,"},
+    {"id": "hunter_2", "text": "Hunter two,"},
+    {"id": "hunter_3", "text": "Hunter three,"},
+    {"id": "hunter_4", "text": "Hunter four,"},
+    {"id": "hunter_5", "text": "Hunter five,"},
+    {"id": "hunter_6", "text": "Hunter six,"},
+    {"id": "hunter_7", "text": "Hunter seven,"},
+    {"id": "hunter_8", "text": "Hunter eight,"},
+    {"id": "code_AAA", "text": "press A, A, A."},
+    {"id": "code_AAB", "text": "press A, A, B."},
+    {"id": "code_ABA", "text": "press A, B, A."},
+    {"id": "code_ABB", "text": "press A, B, B."},
+    {"id": "code_BAA", "text": "press B, A, A."},
+    {"id": "code_BAB", "text": "press B, A, B."},
+    {"id": "code_BBA", "text": "press B, B, A."},
+    {"id": "code_BBB", "text": "press B, B, B."},
+    {"id": "claim_pre",  "text": "Oh!"},
+    {"id": "claim_post", "text": "thinks they've found something!"},
+    {"id": "found_pre",  "text": "Yes!"},
+    {"id": "found_post_T1", "text": "has found treasure one!"},
+    {"id": "found_post_T2", "text": "has found treasure two!"},
+    {"id": "found_post_T3", "text": "has found treasure three!"},
+    {"id": "found_post_T4", "text": "has found treasure four!"},
+    {"id": "found_post_T5", "text": "has found treasure five!"}
+  ],
+
+  "lines": [
+    {"id": "init_open",
+     "text": "Hunters, gather around! Place your finger on the gold logo pad on your micro:bit and hold it there. I need all of you touching before we can begin."},
+
+    {"id": "init_missing_1",
+     "text": "Still waiting for one more hunter. Keep your finger on that gold pad!"},
+    {"id": "init_missing_2",
+     "text": "Still waiting for two more hunters. Fingers on the gold pads, everyone!"},
+    {"id": "init_missing_3",
+     "text": "Still waiting for three more hunters. Gold pads, everyone!"},
+    {"id": "init_missing_4",
+     "text": "Still waiting for four more hunters. Gold pads, please!"},
+    {"id": "init_missing_5",
+     "text": "Still waiting for five more hunters."},
+    {"id": "init_missing_6",
+     "text": "Still waiting for six more hunters."},
+    {"id": "init_missing_7",
+     "text": "Still waiting for seven more hunters."},
+
+    {"id": "init_all_ready",
+     "text": "All hunters ready! Now I'll give each of you a secret code. Listen carefully for your name."},
+
+    {"id": "init_confirm_1", "text": "Hunter one, confirmed!"},
+    {"id": "init_confirm_2", "text": "Hunter two, confirmed!"},
+    {"id": "init_confirm_3", "text": "Hunter three, confirmed!"},
+    {"id": "init_confirm_4", "text": "Hunter four, confirmed!"},
+    {"id": "init_confirm_5", "text": "Hunter five, confirmed!"},
+    {"id": "init_confirm_6", "text": "Hunter six, confirmed!"},
+    {"id": "init_confirm_7", "text": "Hunter seven, confirmed!"},
+    {"id": "init_confirm_8", "text": "Hunter eight, confirmed!"},
+
+    {"id": "init_retry",
+     "text": "Wrong code! Try again. Watch for your name."},
+    {"id": "init_cancel",
+     "text": "Registration cancelled. Starting the hunt now."},
+    {"id": "init_complete",
+     "text": "Everyone identified! Excellent. The treasures are hidden and waiting for you."},
+
+    {"id": "game_start",
+     "text": "The hunt begins now! Go find those treasures!"},
+
+    {"id": "game_over",
+     "text": "All treasures have been found! The hunt is over!"},
+
+    {"id": "winner_1", "text": "The winner is Hunter one!"},
+    {"id": "winner_2", "text": "The winner is Hunter two!"},
+    {"id": "winner_3", "text": "The winner is Hunter three!"},
+    {"id": "winner_4", "text": "The winner is Hunter four!"},
+    {"id": "winner_5", "text": "The winner is Hunter five!"},
+    {"id": "winner_6", "text": "The winner is Hunter six!"},
+    {"id": "winner_7", "text": "The winner is Hunter seven!"},
+    {"id": "winner_8", "text": "The winner is Hunter eight!"},
+    {"id": "winner_tie", "text": "It's a tie! Well done to all hunters!"}
+  ]
+}
