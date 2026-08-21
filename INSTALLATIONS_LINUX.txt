@@ -1,0 +1,336 @@
+================================================================================
+INSTALLATIONS FOR LINUX
+UNBC Micro:bit Games — setup and session commands (Linux / Raspberry Pi OS)
+================================================================================
+
+Copy and paste these commands into a terminal (bash).
+
+Assumes the repo lives at:
+  ~/FolderX\ Repositories
+  or
+  /home/pi/FolderX\ Repositories
+
+If your path is different, change every "cd" line to match.
+
+
+--------------------------------------------------------------------------------
+HOW TO READ THE COMMENTS
+--------------------------------------------------------------------------------
+
+  [DO ONCE]
+      First-time setup on this machine. Skip after it has succeeded.
+
+  [EVERY TIME before initialization]
+      Do this before you start / initialize a game session
+      (power on hardware, check robot, then run the app).
+
+  [WHEN NEEDED]
+      Only when something changed (new story text, new serial port,
+      re-flash firmware, update agent code, etc.).
+
+
+================================================================================
+PART A — FIRST-TIME SETUP  [DO ONCE]
+================================================================================
+
+
+--------------------------------------------------------------------------------
+0) OPTIONAL — check what you already have          [DO ONCE / WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Confirm tools exist before installing anything.
+
+python3 --version
+python3 -m pip --version
+ssh -V
+ls /dev/ttyACM* /dev/ttyUSB* 2>/dev/null || true
+
+
+--------------------------------------------------------------------------------
+1) PYTHON (required)                               [DO ONCE]
+--------------------------------------------------------------------------------
+# Need Python 3.8 or newer (3.11 / 3.12 preferred).
+
+# Debian / Ubuntu / Raspberry Pi OS
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv
+
+python3 --version
+python3 -m pip install --upgrade pip
+
+# Optional: project venv (recommended on Pi)       [DO ONCE]
+# cd ~/FolderX\ Repositories
+# python3 -m venv .venv
+# source .venv/bin/activate
+# After creating a venv, activate it [EVERY TIME before initialization]
+# before running pip or game apps in that session.
+
+
+--------------------------------------------------------------------------------
+2) SYSTEM PACKAGES (serial + SSH + audio helpers)  [DO ONCE]
+--------------------------------------------------------------------------------
+# Serial access for the USB bridge micro:bit
+sudo usermod -aG dialout "$USER"
+# Log out and back in (or reboot) so dialout takes effect.   [DO ONCE]
+
+# OpenSSH client (usually already installed)
+sudo apt install -y openssh-client
+
+# pygame / audio dependencies (Raspberry Pi OS / Debian)
+sudo apt install -y libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 libsdl2-ttf-2.0-0
+
+
+--------------------------------------------------------------------------------
+3) PYTHON PACKAGES — all micro:bit computer apps   [DO ONCE]
+--------------------------------------------------------------------------------
+# Run once after cloning the repo (or after requirements.txt changes).
+
+# Go to the repo root (edit path if needed)
+cd ~/FolderX\ Repositories
+# or:  cd "/home/pi/FolderX Repositories"
+
+# Core packages used by every Flask game + Quest Engine
+python3 -m pip install "flask>=3.0.0" "flask-socketio>=5.3.6" "pyserial>=3.5" "pygame>=2.5.0"
+
+# Optional: robotic TTS fallback if you do NOT install Piper
+python3 -m pip install "pyttsx3>=2.90"
+
+# Install from each project's requirements.txt (safe even if some overlap)
+python3 -m pip install -r pass_the_ball_test/computer_app/requirements.txt
+python3 -m pip install -r pass_the_ball_test_5_players/computer_app/requirements.txt
+python3 -m pip install -r hide_and_seek_test/computer_app/requirements.txt
+python3 -m pip install -r hide_and_seek/computer_app/requirements.txt
+python3 -m pip install -r treasure_hunt_test/computer_app/requirements.txt
+python3 -m pip install -r treasure_hunt/computer_app/requirements.txt
+python3 -m pip install -r quest_engine/computer_app/requirements.txt
+
+
+--------------------------------------------------------------------------------
+4) PIPER (offline neural TTS — authoring voices)   [DO ONCE]
+--------------------------------------------------------------------------------
+# Piper is a separate binary (not a pip package). Voice .onnx files are large
+# and are NOT in git — download them locally.
+# Skip entirely if you will only play pre-built WAVs / silent narration.
+# Voice rebuild is usually done on a PC; a Pi B+ can play WAVs but is slow
+# at generating them.
+
+# A) Download the Linux Piper release for your CPU:   [DO ONCE]
+#    https://github.com/rhasspy/piper/releases
+#    - x86_64 PC:   piper_linux_x86_64.tar.gz
+#    - Raspberry Pi / ARM64: piper_linux_aarch64.tar.gz (name may vary by release)
+
+# B) Unpack somewhere permanent:                      [DO ONCE]
+
+mkdir -p ~/piper
+cd ~/piper
+# unpack the downloaded archive here so ./piper is the executable
+chmod +x piper
+
+# C) Download voice models                            [DO ONCE]
+#    (need BOTH .onnx AND .onnx.json for each voice):
+#
+#    Treasure Hunt Reachy narrator (Amy):
+#    https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/amy/medium
+#
+#    Quest Engine dragon pack (Cori high — optional, large):
+#    https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high
+#
+#    Quest Engine space pack (Amy medium):
+#    https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/amy/medium
+
+# D) Put the .onnx / .onnx.json files in:             [DO ONCE]
+#    ~/FolderX\ Repositories/quest_engine/tools/voices/
+
+# E) Build Quest Engine narration WAVs                [WHEN NEEDED]
+#    Only when you edit story text in packs/*.json (not every session).
+
+cd ~/FolderX\ Repositories/quest_engine
+python3 tools/build_voice.py --piper ~/piper/piper --list
+python3 tools/build_voice.py --piper ~/piper/piper --pack dragon
+python3 tools/build_voice.py --piper ~/piper/piper --pack space
+
+# F) Build Treasure Hunt Reachy voice files           [WHEN NEEDED]
+#    Only if audio/*.wav are missing or narration text changed.
+
+cd ~/FolderX\ Repositories/treasure_hunt/reachy_mini
+python3 build_voice.py --piper ~/piper/piper --model ../../quest_engine/tools/voices/en_US-amy-medium.onnx
+
+# Without Piper, games still run: narration prints in the terminal or uses pyttsx3.
+
+
+--------------------------------------------------------------------------------
+5) REACHY MINI — first-time setup                  [DO ONCE]
+--------------------------------------------------------------------------------
+# Do this once per host that will talk to the robot.
+# Full detail: treasure_hunt/reachy_mini/README.md and LINUX.md
+# After install succeeds, you do NOT re-run install every session
+# (see Part B for every-session steps).
+
+# A) Power on the Reachy Mini. Join the same Wi‑Fi.   [DO ONCE]
+#    Dashboard (optional): http://reachy-mini.local:8000/
+#    Default SSH user: pollen
+#    Default password (first SSH): root
+
+# B) Copy the local CLI config (gitignored):          [DO ONCE]
+
+cd ~/FolderX\ Repositories/treasure_hunt/reachy_mini
+cp reachy_cli.config.example.json reachy_cli.config.json
+# edit host, e.g. pollen@192.168.1.65 or pollen@reachy-mini.local
+nano reachy_cli.config.json
+
+# C) Test network:                                    [DO ONCE]
+
+ping -c 3 reachy-mini.local
+# If that fails, ping the robot's numeric IP instead.
+
+# D) SSH key:                                         [DO ONCE]
+
+ssh-keygen -t ed25519 -C "treasure-hunt"
+ssh-copy-id pollen@reachy-mini.local
+# or: ssh-copy-id pollen@192.168.1.65
+
+ssh pollen@reachy-mini.local echo OK
+
+# E) Deploy agent + enable auto-start on the robot:   [DO ONCE]
+#    Re-run install [WHEN NEEDED] only if agent code or audio changed.
+
+cd ~/FolderX\ Repositories/treasure_hunt/reachy_mini
+python3 reachy_cli.py check
+python3 reachy_cli.py install
+python3 reachy_cli.py status
+
+# F) Point the Treasure Hunt app at the robot:        [DO ONCE]
+#    Edit treasure_hunt/computer_app/config.py:
+#      USE_REACHY = True
+#      REACHY_AGENT_HOST = 'reachy-mini.local'   # or numeric IP
+#      SERIAL_PORT = '/dev/ttyACM0'              # confirm with ls /dev/ttyACM*
+
+
+--------------------------------------------------------------------------------
+6) FIND THE BRIDGE MICRO:BIT SERIAL PORT           [DO ONCE / WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Do once when you first plug the bridge in.
+# Repeat [WHEN NEEDED] if the device path changes.
+
+# 1. Plug the bridge micro:bit into USB.
+# 2. List devices:
+
+ls /dev/ttyACM* /dev/ttyUSB*
+
+# 3. Set SERIAL_PORT in that game's computer_app/config.py, usually:
+#    SERIAL_PORT = '/dev/ttyACM0'
+
+
+--------------------------------------------------------------------------------
+7) FLASH MICRO:BITS                                [DO ONCE / WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Flash each board once per game. Re-flash [WHEN NEEDED] after firmware edits.
+
+# Always use: https://python.microbit.org/v/3
+# Do NOT use uflash (wrong MicroPython on V2).
+
+# Paste the firmware .py from each game's microbit/ folder and Send to micro:bit.
+# Flash order is in each game's README.md.
+
+
+--------------------------------------------------------------------------------
+8) QUICK VERIFY AFTER SETUP                        [DO ONCE]
+--------------------------------------------------------------------------------
+# Confirm packages installed. Optional Reachy check after install.
+
+python3 -c "import flask, flask_socketio, serial; print('OK: flask / socketio / pyserial')"
+python3 -c "import pygame; print('OK: pygame')"
+
+cd ~/FolderX\ Repositories/treasure_hunt/reachy_mini
+python3 reachy_cli.py status
+
+
+================================================================================
+PART B — EVERY TIME BEFORE INITIALIZATION
+(do these before you start / initialize a game session)
+================================================================================
+
+
+--------------------------------------------------------------------------------
+B1) Power on hardware                              [EVERY TIME before initialization]
+--------------------------------------------------------------------------------
+# - Plug in the bridge micro:bit (USB to the host)
+# - Power on player / hunter / wand micro:bits (battery packs)
+# - If using Reachy Mini: power on the robot and wait until it is on Wi‑Fi
+# - Turn on PA / speakers if the game uses narration
+# - If you use a venv: source .venv/bin/activate
+
+
+--------------------------------------------------------------------------------
+B2) Confirm serial + robot (optional but recommended)
+                                                   [EVERY TIME before initialization]
+--------------------------------------------------------------------------------
+# Confirm the bridge is visible:
+
+ls /dev/ttyACM* /dev/ttyUSB*
+
+# If using Reachy:
+
+cd ~/FolderX\ Repositories/treasure_hunt/reachy_mini
+python3 reachy_cli.py status
+# If status fails and you never ran "install", start the agent once:
+# python3 reachy_cli.py start
+
+
+--------------------------------------------------------------------------------
+B3) Start the game app                             [EVERY TIME before initialization]
+--------------------------------------------------------------------------------
+# Pick ONE game below, then open the browser URL shown.
+
+# --- Pass the Ball ---
+cd ~/FolderX\ Repositories/pass_the_ball_test/computer_app
+python3 app.py
+# open http://localhost:5000
+
+cd ~/FolderX\ Repositories/pass_the_ball_test_5_players/computer_app
+python3 app.py
+# open http://localhost:5000
+
+# --- Hide and Seek ---
+cd ~/FolderX\ Repositories/hide_and_seek_test/computer_app
+python3 app.py
+# open http://localhost:5000
+
+cd ~/FolderX\ Repositories/hide_and_seek/computer_app
+python3 app.py
+# open http://localhost:5000
+
+# --- Treasure Hunt ---
+cd ~/FolderX\ Repositories/treasure_hunt_test/computer_app
+python3 app.py
+# open http://localhost:5000
+
+cd ~/FolderX\ Repositories/treasure_hunt/computer_app
+python3 app.py
+# open http://localhost:5000/setup
+# or http://<pi-ip>:5000/setup from another machine on the LAN
+# If using Reachy: enable "Use Reachy Mini" on the setup page, then Start Game.
+
+# --- Quest Engine (bench console — Phase 1) ---
+cd ~/FolderX\ Repositories/quest_engine/computer_app
+python3 challenge_console.py --list
+python3 challenge_console.py --port /dev/ttyACM0
+
+# --- Quest Engine (gamemaster web console) ---
+cd ~/FolderX\ Repositories/quest_engine/computer_app
+python3 app.py
+# open http://localhost:5000
+
+
+--------------------------------------------------------------------------------
+B4) Software-only checks (no micro:bits)           [WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Not required before a live session — useful for verifying code after edits.
+
+cd ~/FolderX\ Repositories/quest_engine
+python3 tools/simulate_wand.py
+python3 tools/simulate_session.py
+
+
+================================================================================
+End of Linux installation sheet
+================================================================================

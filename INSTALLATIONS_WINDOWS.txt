@@ -1,0 +1,320 @@
+================================================================================
+INSTALLATIONS FOR WINDOWS
+UNBC Micro:bit Games — setup and session commands (PC)
+================================================================================
+
+Copy and paste these commands into PowerShell (or Windows Terminal).
+
+Assumes you cloned (or unzipped) the repo to:
+  D:\FolderX Repositories
+
+If your path is different, change every "cd" line to match.
+
+
+--------------------------------------------------------------------------------
+HOW TO READ THE COMMENTS
+--------------------------------------------------------------------------------
+
+  [DO ONCE]
+      First-time setup on this PC. Skip after it has succeeded.
+
+  [EVERY TIME before initialization]
+      Do this before you start / initialize a game session
+      (power on hardware, check robot, then run the app).
+
+  [WHEN NEEDED]
+      Only when something changed (new story text, new COM port,
+      re-flash firmware, update agent code, etc.).
+
+
+================================================================================
+PART A — FIRST-TIME SETUP  [DO ONCE]
+================================================================================
+
+
+--------------------------------------------------------------------------------
+0) OPTIONAL — check what you already have          [DO ONCE / WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Confirm tools exist before installing anything.
+
+python --version
+pip --version
+ssh -V
+where python
+
+
+--------------------------------------------------------------------------------
+1) PYTHON (required)                               [DO ONCE]
+--------------------------------------------------------------------------------
+# Install only if "python --version" fails, or you are below Python 3.8.
+
+# 1. Download Python 3.12 (or newer 3.x) from:
+#    https://www.python.org/downloads/windows/
+# 2. Run the installer.
+#    IMPORTANT: tick "Add python.exe to PATH"
+#    Prefer "Install for all users" if you can.
+# 3. Close and reopen PowerShell, then check:
+
+python --version
+python -m pip install --upgrade pip
+
+
+--------------------------------------------------------------------------------
+2) OPENSSH CLIENT (required for Reachy Mini)       [DO ONCE]
+--------------------------------------------------------------------------------
+# Windows 10/11 usually already has OpenSSH. Check:
+
+ssh -V
+
+# If missing, install via Settings → Apps → Optional features →
+#   Add a feature → OpenSSH Client
+# Or in an Administrator PowerShell:
+
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+
+
+--------------------------------------------------------------------------------
+3) PYTHON PACKAGES — all micro:bit computer apps   [DO ONCE]
+--------------------------------------------------------------------------------
+# Run once after cloning the repo (or after requirements.txt changes).
+
+# Go to the repo root (edit path if needed)
+cd "D:\FolderX Repositories"
+
+# Core packages used by every Flask game + Quest Engine
+python -m pip install "flask>=3.0.0" "flask-socketio>=5.3.6" "pyserial>=3.5" "pygame>=2.5.0"
+
+# Optional: robotic TTS fallback if you do NOT install Piper
+python -m pip install "pyttsx3>=2.90"
+
+# Install from each project's requirements.txt (safe even if some overlap)
+python -m pip install -r "pass_the_ball_test\computer_app\requirements.txt"
+python -m pip install -r "pass_the_ball_test_5_players\computer_app\requirements.txt"
+python -m pip install -r "hide_and_seek_test\computer_app\requirements.txt"
+python -m pip install -r "hide_and_seek\computer_app\requirements.txt"
+python -m pip install -r "treasure_hunt_test\computer_app\requirements.txt"
+python -m pip install -r "treasure_hunt\computer_app\requirements.txt"
+python -m pip install -r "quest_engine\computer_app\requirements.txt"
+
+
+--------------------------------------------------------------------------------
+4) PIPER (offline neural TTS — authoring voices)   [DO ONCE]
+--------------------------------------------------------------------------------
+# Piper is a separate binary (not a pip package). Voice .onnx files are large
+# and are NOT in git — download them locally.
+# Skip entirely if you will only play pre-built WAVs / silent narration.
+
+# A) Download the Windows Piper release:     [DO ONCE]
+#    https://github.com/rhasspy/piper/releases
+#    Pick the Windows zip (e.g. piper_windows_amd64.zip).
+
+# B) Unzip so you have something like:       [DO ONCE]
+#    D:\FolderX Repositories\piper\piper.exe
+#    D:\FolderX Repositories\piper\espeak-ng-data\...
+
+# C) Download voice models                   [DO ONCE]
+#    (need BOTH .onnx AND .onnx.json for each voice):
+#
+#    Treasure Hunt Reachy narrator (Amy):
+#    https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/amy/medium
+#
+#    Quest Engine dragon pack (Cori high — optional, large):
+#    https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high
+#
+#    Quest Engine space pack (Amy medium — same Amy as above is fine):
+#    https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/amy/medium
+
+# D) Put the .onnx / .onnx.json files in:    [DO ONCE]
+#    D:\FolderX Repositories\quest_engine\tools\voices\
+
+# E) Build Quest Engine narration WAVs       [WHEN NEEDED]
+#    Only when you edit story text in packs/*.json (not every session).
+
+cd "D:\FolderX Repositories\quest_engine"
+python tools\build_voice.py --piper ..\piper\piper.exe --list
+python tools\build_voice.py --piper ..\piper\piper.exe --pack dragon
+python tools\build_voice.py --piper ..\piper\piper.exe --pack space
+
+# F) Build Treasure Hunt Reachy voice files  [WHEN NEEDED]
+#    Only if audio/*.wav are missing or narration text changed.
+
+cd "D:\FolderX Repositories\treasure_hunt\reachy_mini"
+python build_voice.py --piper "..\..\piper\piper.exe" --model "..\..\quest_engine\tools\voices\en_US-amy-medium.onnx"
+
+# Without Piper, games still run: narration prints in the terminal or uses pyttsx3.
+
+
+--------------------------------------------------------------------------------
+5) REACHY MINI — first-time setup                  [DO ONCE]
+--------------------------------------------------------------------------------
+# Do this once per PC that will talk to the robot.
+# After install succeeds, you do NOT re-run install every session
+# (see Part B for every-session steps).
+
+# A) Power on the Reachy Mini. Join the same Wi‑Fi as this PC.   [DO ONCE]
+#    Dashboard (optional): http://reachy-mini.local:8000/
+#    Default SSH user: pollen
+#    Default password (first SSH): root
+
+# B) Copy the local CLI config (gitignored — one per machine):   [DO ONCE]
+
+cd "D:\FolderX Repositories\treasure_hunt\reachy_mini"
+copy reachy_cli.config.example.json reachy_cli.config.json
+
+# Edit reachy_cli.config.json and set "host", for example:
+#   "host": "pollen@192.168.1.65"
+# or, if .local works on your network:
+#   "host": "pollen@reachy-mini.local"
+
+# C) Test network:                                               [DO ONCE]
+
+ping reachy-mini.local
+# If that fails, ping the robot's numeric IP instead.
+
+# D) SSH key (never store the password in scripts):              [DO ONCE]
+
+ssh-keygen -t ed25519 -C "treasure-hunt"
+# Press Enter for defaults unless you already have a key.
+
+$pubkey = Get-Content "$env:USERPROFILE\.ssh\id_ed25519.pub"
+ssh pollen@192.168.1.65 "mkdir -p ~/.ssh && echo '$pubkey' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+# Replace 192.168.1.65 with your robot IP / reachy-mini.local
+
+ssh pollen@192.168.1.65 echo OK
+
+# E) Deploy agent + enable auto-start on the robot:              [DO ONCE]
+#    Re-run install [WHEN NEEDED] only if agent code or audio changed.
+
+cd "D:\FolderX Repositories\treasure_hunt\reachy_mini"
+python reachy_cli.py check
+python reachy_cli.py install
+python reachy_cli.py status
+
+# F) Point the Treasure Hunt app at the robot:                   [DO ONCE]
+#    Edit treasure_hunt\computer_app\config.py:
+#      USE_REACHY = True
+#      REACHY_AGENT_HOST = '192.168.1.65'   # your robot IP
+#      SERIAL_PORT = 'COM3'                 # see Device Manager for the bridge
+
+
+--------------------------------------------------------------------------------
+6) FIND THE BRIDGE MICRO:BIT COM PORT              [DO ONCE / WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Do once when you first plug the bridge in.
+# Repeat [WHEN NEEDED] if Windows assigns a different COM number.
+
+# 1. Plug the bridge micro:bit into USB.
+# 2. Open Device Manager → Ports (COM & LPT)
+# 3. Note the COM number (e.g. COM3, COM4)
+# 4. Set SERIAL_PORT in that game's computer_app\config.py
+
+
+--------------------------------------------------------------------------------
+7) FLASH MICRO:BITS                                [DO ONCE / WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Flash each board once per game. Re-flash [WHEN NEEDED] after firmware edits.
+
+# Always use: https://python.microbit.org/v/3
+# Do NOT use uflash (wrong MicroPython on V2).
+
+# Paste the firmware .py from each game's microbit\ folder and Send to micro:bit.
+# Flash order is in each game's README.md.
+
+
+--------------------------------------------------------------------------------
+8) QUICK VERIFY AFTER SETUP                        [DO ONCE]
+--------------------------------------------------------------------------------
+# Confirm packages installed. Optional Reachy check after install.
+
+python -c "import flask, flask_socketio, serial; print('OK: flask / socketio / pyserial')"
+python -c "import pygame; print('OK: pygame')"
+
+cd "D:\FolderX Repositories\treasure_hunt\reachy_mini"
+python reachy_cli.py status
+
+
+================================================================================
+PART B — EVERY TIME BEFORE INITIALIZATION
+(do these before you start / initialize a game session)
+================================================================================
+
+
+--------------------------------------------------------------------------------
+B1) Power on hardware                              [EVERY TIME before initialization]
+--------------------------------------------------------------------------------
+# - Plug in the bridge micro:bit (USB to the PC)
+# - Power on player / hunter / wand micro:bits (battery packs)
+# - If using Reachy Mini: power on the robot and wait until it is on Wi‑Fi
+# - Turn on PA / speakers if the game uses narration
+
+
+--------------------------------------------------------------------------------
+B2) Confirm serial + robot (optional but recommended)
+                                                   [EVERY TIME before initialization]
+--------------------------------------------------------------------------------
+# Bridge still on the expected COM port? Check Device Manager if unsure.
+# If using Reachy:
+
+cd "D:\FolderX Repositories\treasure_hunt\reachy_mini"
+python reachy_cli.py status
+# If status fails and you never ran "install", start the agent once:
+# python reachy_cli.py start
+
+
+--------------------------------------------------------------------------------
+B3) Start the game app                             [EVERY TIME before initialization]
+--------------------------------------------------------------------------------
+# Pick ONE game below, then open the browser URL shown.
+
+# --- Pass the Ball (test / 5 players) ---
+cd "D:\FolderX Repositories\pass_the_ball_test\computer_app"
+python app.py
+# open http://localhost:5000
+
+cd "D:\FolderX Repositories\pass_the_ball_test_5_players\computer_app"
+python app.py
+# open http://localhost:5000
+
+# --- Hide and Seek ---
+cd "D:\FolderX Repositories\hide_and_seek_test\computer_app"
+python app.py
+# open http://localhost:5000
+
+cd "D:\FolderX Repositories\hide_and_seek\computer_app"
+python app.py
+# open http://localhost:5000
+
+# --- Treasure Hunt ---
+cd "D:\FolderX Repositories\treasure_hunt_test\computer_app"
+python app.py
+# open http://localhost:5000
+
+cd "D:\FolderX Repositories\treasure_hunt\computer_app"
+python app.py
+# open http://localhost:5000/setup
+# If using Reachy: enable "Use Reachy Mini" on the setup page, then Start Game.
+
+# --- Quest Engine (bench console — Phase 1) ---
+cd "D:\FolderX Repositories\quest_engine\computer_app"
+python challenge_console.py --list
+python challenge_console.py --port COM3
+
+# --- Quest Engine (gamemaster web console) ---
+cd "D:\FolderX Repositories\quest_engine\computer_app"
+python app.py
+# open http://localhost:5000
+
+
+--------------------------------------------------------------------------------
+B4) Software-only checks (no micro:bits)           [WHEN NEEDED]
+--------------------------------------------------------------------------------
+# Not required before a live session — useful for verifying code after edits.
+
+cd "D:\FolderX Repositories\quest_engine"
+python tools\simulate_wand.py
+python tools\simulate_session.py
+
+
+================================================================================
+End of Windows installation sheet
+================================================================================

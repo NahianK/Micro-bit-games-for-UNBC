@@ -212,6 +212,14 @@ Flash order for each game is documented in that game's `README.md`.
 
 ---
 
+## First-time install (Windows / Linux)
+
+Copy-paste command sheets for a fresh machine (Python, Flask, Piper, Reachy Mini,
+and every micro:bit computer app):
+
+- [`INSTALLATIONS_WINDOWS.txt`](INSTALLATIONS_WINDOWS.txt)
+- [`INSTALLATIONS_LINUX.txt`](INSTALLATIONS_LINUX.txt) — also for Raspberry Pi OS
+
 ## Running the Computer App
 
 ```powershell
